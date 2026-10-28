@@ -10,8 +10,7 @@ let log = Logger(subsystem: "com.instilled.hop", category: "app")
 
 final class AppModel: ObservableObject {
     static let shared = AppModel()
-    static let configURL = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".config/hop/config.json")
+    static let configURL = Config.defaultURL
 
     @Published private(set) var profiles: [ChromeProfile] = []
     @Published private(set) var config = Config()
@@ -71,17 +70,21 @@ final class AppModel: ObservableObject {
 
     func reload() {
         var problems: [String] = []
+        // macOS may block reading another app's data; then fall back to profiles recorded in the config.
+        let discovered: [ChromeProfile]?
         do {
-            profiles = try LocalState.profiles(from: Data(contentsOf: LocalState.defaultURL))
+            discovered = try LocalState.profiles(from: Data(contentsOf: LocalState.defaultURL))
         } catch {
-            problems.append("Couldn't read Chrome's Local State: \(error.localizedDescription)")
+            log.info("Local State unreadable: \(error.localizedDescription, privacy: .public)")
+            discovered = nil
         }
 
         let fm = FileManager.default
         if !fm.fileExists(atPath: Self.configURL.path) {
             do {
                 try fm.createDirectory(at: Self.configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try Config.makeDefault(for: profiles).encoded().write(to: Self.configURL)
+                let initial = Config.makeDefault(for: discovered ?? [])
+                try (discovered.map(initial.syncing) ?? initial).encoded().write(to: Self.configURL)
             } catch {
                 problems.append("Couldn't write \(Self.configURL.path): \(error.localizedDescription)")
             }
@@ -90,6 +93,10 @@ final class AppModel: ObservableObject {
             config = try JSONDecoder().decode(Config.self, from: Data(contentsOf: Self.configURL))
         } catch {
             problems.append("config.json: \(Self.describe(error)) — keeping previous config")
+        }
+        profiles = discovered ?? config.declaredProfiles()
+        if discovered == nil, profiles.isEmpty {
+            problems.append("Can't read Chrome's profiles. Run `hop --sync-profiles` in Terminal.")
         }
 
         for (key, settings) in config.profiles {
@@ -182,7 +189,11 @@ final class AppModel: ObservableObject {
         case "hop":
             let target = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                 .queryItems?.first { $0.name == "url" }?.value.flatMap(URL.init(string:))
-            if let target { openMini(target) }
+            if url.host == "reload" {
+                reload()
+            } else if let target {
+                openMini(target)
+            }
         case "http", "https", "file":
             openMini(url)
         default:

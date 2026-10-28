@@ -80,6 +80,18 @@ let personal = ChromeProfile(dir: "Profile 5", name: "Personal", titleLabel: "Al
     #expect(disabled.previousProfileHotkey == Config.defaultPreviousProfileHotkey)
 }
 
+@Test func syncKeepsHotkeysAndOverrides() {
+    let config = Config(profiles: ["Personal": .init(hotkey: "ctrl+2"), "Default": .init(titleLabel: "Custom")])
+    let synced = config.syncing([work, personal])
+    #expect(synced.profiles == [
+        "Default": .init(titleLabel: "Custom", name: "Work"),
+        "Profile 5": .init(hotkey: "ctrl+2", titleLabel: "Alex (Personal)", name: "Personal"),
+    ])
+    #expect(synced.declaredProfiles() == [
+        ChromeProfile(dir: "Default", name: "Work", titleLabel: "Custom"), personal,
+    ])
+}
+
 @Test func cycleOrderResolvesNamesAndDirs() {
     let config = Config(profileOrder: ["Personal", "Default", "Nope"])
     #expect(config.cycleOrder([work, personal]) == [personal, work])

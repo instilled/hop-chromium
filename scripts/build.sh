@@ -39,6 +39,8 @@ if [[ "${1:-}" == "--install" ]]; then
   ditto "$APP" /Applications/Hop.app
   /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Hop.app
   open /Applications/Hop.app
+  # Hop.app itself may not be allowed to read Chrome's Local State; record the profiles from here.
+  /Applications/Hop.app/Contents/Helpers/hop --sync-profiles
   echo "Installed /Applications/Hop.app"
 else
   echo "Built $APP"

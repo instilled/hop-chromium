@@ -48,6 +48,10 @@ scripts/build.sh --install   # builds dist/Hop.app, copies it to /Applications, 
 
 Plain `scripts/build.sh` only builds `dist/Hop.app`.
 
+`--install` also runs `hop --sync-profiles`, which records your Chrome profiles in Hop's config. macOS may not let
+Hop.app read Chrome's data (`Local State`), but a command run from Terminal usually can. Run
+`/Applications/Hop.app/Contents/Helpers/hop --sync-profiles` again after adding or renaming a Chrome profile.
+
 On first launch Hop asks for Accessibility access. Click **Continue** and turn on Hop in
 System Settings → Privacy & Security → Accessibility. No restart needed: the *Grant Accessibility…* menu item
 disappears within a few seconds.
@@ -120,7 +124,8 @@ Hop covers the keyboard side. These Chrome settings cover the rest:
 | `miniProfile` | Fallback profile for mini windows when the current one can't be determined. |
 
 Profiles are referenced by directory (`Default`, `Profile 5`) or display name (`Personal`). They're discovered from
-`~/Library/Application Support/Google/Chrome/Local State`. Hotkeys are written as modifiers `cmd`, `opt`/`alt`,
+`~/Library/Application Support/Google/Chrome/Local State`, or, when macOS blocks Hop from reading it, taken from the
+`name`/`titleLabel` entries that `hop --sync-profiles` writes. Hotkeys are written as modifiers `cmd`, `opt`/`alt`,
 `ctrl`, `shift` plus one character or one of `space return tab esc delete left right up down f1`…`f12`. Characters
 follow your current keyboard layout.
 
@@ -139,6 +144,10 @@ follow your current keyboard layout.
   it over as `hop://open?url=…`.
 
 ## Known limitations
+
+- **Reading Chrome's profile list:** recent macOS versions block Hop.app from reading Chrome's `Local State` ("you
+  don't have permission to view it"). Hop then uses the profiles recorded by `hop --sync-profiles`, which you need to
+  re-run after profile changes. Granting Hop Full Disk Access should also lift the block (untested), but isn't needed.
 
 - **Title matching:**
   - Two profiles with the same label (same first name and profile name) can't be told apart.

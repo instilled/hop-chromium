@@ -7,12 +7,18 @@ public struct Config: Codable, Equatable {
         public var hotkey: String?
         /// Override when the window-title suffix differs from what Hop derives.
         public var titleLabel: String?
+        /// Display name, written by `hop --sync-profiles` for when Hop can't read Local State.
+        public var name: String?
 
-        public init(hotkey: String? = nil, titleLabel: String? = nil) {
+        public init(hotkey: String? = nil, titleLabel: String? = nil, name: String? = nil) {
             self.hotkey = hotkey
             self.titleLabel = titleLabel
+            self.name = name
         }
     }
+
+    public static let defaultURL = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".config/hop/config.json")
 
     public static let defaultPromoteHotkey = "opt+shift+p"
     public static let defaultPreviousProfileHotkey = "cmd+opt+left"
@@ -61,6 +67,28 @@ public struct Config: Codable, Equatable {
 
     public static func resolve(_ key: String, in profiles: [ChromeProfile]) -> ChromeProfile? {
         profiles.first { $0.dir == key } ?? profiles.first { $0.name.caseInsensitiveCompare(key) == .orderedSame }
+    }
+
+    /// Profiles as declared in the config, for when Local State is unreadable. Keys are taken as directories.
+    public func declaredProfiles() -> [ChromeProfile] {
+        profiles.compactMap { dir, settings in
+            guard let name = settings.name else { return nil }
+            return ChromeProfile(dir: dir, name: name, titleLabel: settings.titleLabel ?? name)
+        }
+        .sorted(by: LocalState.profileOrder)
+    }
+
+    /// Records each discovered profile's name and title label, keeping hotkeys and label overrides.
+    public func syncing(_ discovered: [ChromeProfile]) -> Config {
+        var copy = self
+        for profile in discovered {
+            let key = profiles.keys.first { Self.resolve($0, in: [profile]) != nil } ?? profile.dir
+            var settings = copy.profiles.removeValue(forKey: key) ?? ProfileSettings()
+            settings.name = profile.name
+            settings.titleLabel = settings.titleLabel ?? profile.titleLabel
+            copy.profiles[profile.dir] = settings
+        }
+        return copy
     }
 
     public func cycleOrder(_ profiles: [ChromeProfile]) -> [ChromeProfile] {
