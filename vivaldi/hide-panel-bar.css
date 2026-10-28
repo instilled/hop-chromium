@@ -1,0 +1,21 @@
+/* Vivaldi UI modification: hide the panel bar (the icon strip), keep the open panel (e.g. Hop Sidebar).
+   Open and close the panel with Quick Commands (⌘E → "Toggle Current Panel") or a key set in Settings → Keyboard. */
+#panels #switch { display: none !important; }
+
+/* With no panel open, the container would be an empty strip where the bar was. */
+#panels-container.left:not(.expanded) { display: none !important; }
+
+/* Vivaldi right-aligns the panel in a box that still includes the bar's width; let it fill the box. */
+#panels-container.left .panel-group .panel-collapse-guard,
+#panels-container.left #ui-region-panel {
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+#panels-container.left .panel { padding-left: 0 !important; }
+
+/* Keep Vivaldi's usual 6px gap to the window edge, as on the page's other sides. */
+#panels-container.left.expanded { margin-left: 6px !important; }
+
+/* Drop the web panel's title row (name, back/forward/reload/home, close). */
+#panels .webpanel-stack .webpanel .webpanel-header { display: none !important; }
