@@ -1,0 +1,202 @@
+:root {
+  --bg: #f5f5f7;
+  --fg: #1d1d1f;
+  --muted: #86868b;
+  --hover: rgba(0, 0, 0, 0.06);
+  --active: #fff;
+  --active-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e20;
+    --fg: #ececee;
+    --muted: #8e8e93;
+    --hover: rgba(255, 255, 255, 0.07);
+    --active: rgba(255, 255, 255, 0.14);
+    --active-shadow: none;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.25 system-ui, -apple-system, sans-serif;
+  user-select: none;
+}
+
+h2 {
+  margin: 14px 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+ul { list-style: none; margin: 0; padding: 0; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 4px 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+.row:hover { background: var(--hover); }
+.row.active { background: var(--active); box-shadow: var(--active-shadow); }
+.row.discarded .title { color: var(--muted); }
+
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+img.icon { object-fit: contain; }
+
+.title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.close {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  visibility: hidden;
+}
+.row:hover .close, .row.active .close { visibility: visible; }
+.close:hover { background: var(--hover); color: var(--fg); }
+
+/* Bookmark folders. */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .icon::before { content: "›"; font-size: 15px; transition: transform 0.12s; }
+details[open] > summary .icon::before { transform: rotate(90deg); }
+details > ul { padding-left: 14px; }
+
+/* Tab groups. */
+.group { margin-top: 4px; }
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.group-label::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  border-radius: 50%;
+  background: var(--group);
+}
+.group > ul { padding-left: 10px; border-left: 2px solid var(--group); margin-left: 11px; }
+
+.grey { --group: #9aa0a6; }
+.blue { --group: #4f8ff7; }
+.red { --group: #ee675c; }
+.yellow { --group: #f6bf26; }
+.green { --group: #5bb974; }
+.pink { --group: #f17bb6; }
+.purple { --group: #b57ef1; }
+.cyan { --group: #4ecde6; }
+.orange { --group: #fa903e; }
+
+.empty { padding: 4px 8px; color: var(--muted); }
+
+/* "Pinned" bookmarks folder: favicon tiles, like Arc's favorites. ⌘1–⌘6 select the first six. */
+.pinned {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.pinned:empty { display: none; }
+.pinned button {
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--hover);
+  display: grid;
+  place-items: center;
+}
+.pinned button:hover { filter: brightness(1.08); }
+.pinned button.active { background: var(--active); box-shadow: var(--active-shadow); }
+.pinned button:not(.open) img { opacity: 0.7; }
+
+/* Tabs heading with the hide-inactive toggle. */
+h2 { display: flex; align-items: center; justify-content: space-between; }
+.toggle {
+  border: 0;
+  border-radius: 5px;
+  padding: 2px 6px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+}
+.toggle:hover { background: var(--hover); }
+.toggle.on { background: var(--active); color: var(--fg); box-shadow: var(--active-shadow); }
+
+/* Rename field (right-click a bookmark, folder or tile). */
+.rename {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--muted);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  outline: none;
+  user-select: text;
+}
+.rename.tile { grid-column: 1 / -1; height: 44px; border-radius: 10px; }
+
+/* Drag and drop into / within the pinned grid. */
+.pinned button.drop { outline: 2px solid var(--muted); outline-offset: -2px; }
+.pinned button[draggable="true"], .row[draggable="true"] { -webkit-user-drag: element; }
+
+/* Unread counts read from tab titles ("Inbox (3)"). */
+.badge {
+  flex: none;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+}
+.pinned button { position: relative; }
+.pinned .badge { position: absolute; top: 3px; right: 3px; }
