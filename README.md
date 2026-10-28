@@ -42,7 +42,7 @@ no AppleScript/Automation access is used.
 ## Install
 
 ```sh
-git clone https://github.com/<you>/hop-chrome && cd hop-chrome
+git clone https://github.com/instilled/hop-chrome && cd hop-chrome
 scripts/build.sh --install   # builds dist/Hop.app, copies it to /Applications, launches it
 ```
 
