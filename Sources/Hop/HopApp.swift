@@ -61,9 +61,9 @@ private struct MenuContent: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
-        let current = model.miniProfile
+        let current = model.currentProfile
         if model.profiles.isEmpty {
-            Text("No Chrome profiles")
+            Text("No profiles")
         }
         // Checkmark = current profile, where mini windows open.
         ForEach(model.profiles) { profile in
@@ -95,6 +95,7 @@ private struct MenuContent: View {
         }
 
         Divider()
+        Toggle("Open Links in Mini Window", isOn: Binding(get: { model.opensLinksInMini }, set: { model.setOpensLinksInMini($0) }))
         Toggle("Launch at Login", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
         Button("Set as Default Browser…") { model.setDefaultBrowser() }
         Button("Reload Config") { model.reload() }

@@ -78,6 +78,9 @@ let personal = ChromeProfile(dir: "Profile 5", name: "Personal", titleLabel: "Al
     let disabled = try JSONDecoder().decode(Config.self, from: Data(#"{"nextProfileHotkey": null}"#.utf8))
     #expect(disabled.nextProfileHotkey == nil)
     #expect(disabled.previousProfileHotkey == Config.defaultPreviousProfileHotkey)
+    #expect(empty.openLinksIn == .mini)
+    let tabs = try JSONDecoder().decode(Config.self, from: Data(#"{"openLinksIn": "tab"}"#.utf8))
+    #expect(tabs.openLinksIn == .tab)
 }
 
 @Test func syncKeepsHotkeysAndOverrides() {
@@ -96,4 +99,31 @@ let personal = ChromeProfile(dir: "Profile 5", name: "Personal", titleLabel: "Al
     let config = Config(profileOrder: ["Personal", "Default", "Nope"])
     #expect(config.cycleOrder([work, personal]) == [personal, work])
     #expect(Config().cycleOrder([work, personal]) == [work, personal])
+}
+
+@Test func vivaldiTitles() {
+    let marker = Browser.vivaldi.titleMarker
+    // Normal Vivaldi windows carry no profile label, even with several profiles.
+    #expect(WindowClassifier.classify("Start Page - Vivaldi", profiles: [work, personal], marker: marker) == (.normal, nil))
+    #expect(WindowClassifier.classify("Start Page - Vivaldi", profiles: [work], marker: marker) == (.normal, work))
+    // Mini (--app) windows do get the label once there are several profiles.
+    #expect(WindowClassifier.classify("Example Domain - Alex (Work)", profiles: [work, personal], marker: marker) == (.app, work))
+    #expect(WindowClassifier.classify("Example Domain", profiles: [work], marker: marker) == (.app, nil))
+}
+
+@Test func browserConfig() throws {
+    #expect(Config().targetBrowser == .chrome)
+    let vivaldi = try JSONDecoder().decode(Config.self, from: Data(#"{"browser": "Vivaldi"}"#.utf8))
+    #expect(vivaldi.targetBrowser == .vivaldi)
+    let unknown = try JSONDecoder().decode(Config.self, from: Data(#"{"browser": "arc"}"#.utf8))
+    #expect(unknown.targetBrowser == .chrome)
+    #expect(Browser.vivaldi.localStateURL.path.hasSuffix("Library/Application Support/Vivaldi/Local State"))
+}
+
+@Test func syncDropsVanishedProfiles() {
+    let config = Config(profiles: ["Profile 5": .init(name: "Gone"), "Profile 7": .init(hotkey: "ctrl+7")])
+    let synced = config.syncing([work])
+    #expect(synced.profiles["Profile 5"] == nil)
+    #expect(synced.profiles["Profile 7"]?.hotkey == "ctrl+7")
+    #expect(synced.profiles["Default"] != nil)
 }

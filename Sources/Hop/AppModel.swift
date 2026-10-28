@@ -19,19 +19,21 @@ final class AppModel: ObservableObject {
     @Published private(set) var axTrusted = AXIsProcessTrusted()
     @Published private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
 
-    private let chrome = Chrome()
+    /// Replaced when the config switches browsers.
+    private var chrome = Chrome(browser: .chrome)
 
-    private var globalHotkeys: [UInt32] = []
     /// Registered only while Chrome is frontmost, so they don't steal keys from other apps.
     private var chromeHotkeys: [UInt32] = []
+    /// Registered only while a mini window has focus, so ⌘O stays "Open File…" everywhere else.
+    private var promoteHotkey: UInt32?
     private var chromeBindings: [(hotkey: String, action: () -> Void)] = []
     private var chromeActive = false
     private var started = false
 
-    /// Where mini windows open: the profile last selected in Chrome, else Chrome's last_used, else config.miniProfile.
-    var miniProfile: ChromeProfile {
+    /// Where links open: the profile last selected in Chrome, else Chrome's last_used, else config.miniProfile.
+    var currentProfile: ChromeProfile {
         if let current = chrome.currentProfile(profiles: profiles) { return current }
-        if let data = try? Data(contentsOf: LocalState.defaultURL), let dir = LocalState.lastUsed(from: data),
+        if let data = try? Data(contentsOf: chrome.browser.localStateURL), let dir = LocalState.lastUsed(from: data),
            let profile = Config.resolve(dir, in: profiles) {
             return profile
         }
@@ -43,15 +45,16 @@ final class AppModel: ObservableObject {
         guard !started else { return }
         started = true
         log.info("accessibility trusted: \(self.axTrusted, privacy: .public)")
+        chrome.onFocusChange = { [weak self] in self?.updatePromoteHotkey() }
         reload()
 
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
         ) { [weak self] note in
             let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
-            self?.setChromeActive(app?.bundleIdentifier == Chrome.bundleID)
+            self?.setChromeActive(app?.bundleIdentifier == self?.chrome.browser.bundleID)
         }
-        setChromeActive(NSWorkspace.shared.frontmostApplication?.bundleIdentifier == Chrome.bundleID)
+        setChromeActive(NSWorkspace.shared.frontmostApplication?.bundleIdentifier == chrome.browser.bundleID)
 
         DistributedNotificationCenter.default().addObserver(
             forName: NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String), object: nil, queue: .main
@@ -70,10 +73,18 @@ final class AppModel: ObservableObject {
 
     func reload() {
         var problems: [String] = []
+        // The browser comes from the config, so read that first (keeping the previous one if it's broken).
+        if let data = try? Data(contentsOf: Self.configURL), let parsed = try? JSONDecoder().decode(Config.self, from: data) {
+            if Browser.named(parsed.browser) == nil {
+                problems.append("config.json: unknown browser \"\(parsed.browser)\" (use \(Browser.all.map(\.id).joined(separator: " or "))) — using Chrome")
+            }
+            switchBrowser(to: parsed.targetBrowser)
+        }
+
         // macOS may block reading another app's data; then fall back to profiles recorded in the config.
         let discovered: [ChromeProfile]?
         do {
-            discovered = try LocalState.profiles(from: Data(contentsOf: LocalState.defaultURL))
+            discovered = try LocalState.profiles(from: Data(contentsOf: chrome.browser.localStateURL))
         } catch {
             log.info("Local State unreadable: \(error.localizedDescription, privacy: .public)")
             discovered = nil
@@ -96,12 +107,12 @@ final class AppModel: ObservableObject {
         }
         profiles = discovered ?? config.declaredProfiles()
         if discovered == nil, profiles.isEmpty {
-            problems.append("Can't read Chrome's profiles. Run `hop --sync-profiles` in Terminal.")
+            problems.append("Can't read \(chrome.browser.name)'s profiles. Run `hop --sync-profiles` in Terminal.")
         }
 
         for (key, settings) in config.profiles {
             guard let profile = Config.resolve(key, in: profiles) else {
-                problems.append("config.json: no Chrome profile \"\(key)\"")
+                problems.append("config.json: no \(chrome.browser.name) profile \"\(key)\"")
                 continue
             }
             if let label = settings.titleLabel, let i = profiles.firstIndex(of: profile) {
@@ -109,26 +120,37 @@ final class AppModel: ObservableObject {
             }
         }
         if !profiles.isEmpty, Config.resolve(config.miniProfile, in: profiles) == nil {
-            problems.append("config.json: miniProfile (fallback) \"\(config.miniProfile)\" is not a Chrome profile")
+            problems.append("config.json: miniProfile (fallback) \"\(config.miniProfile)\" is not a \(chrome.browser.name) profile")
         }
 
         errors = problems
         registerHotkeys()
     }
 
-    private func registerHotkeys() {
-        HotkeyCenter.shared.unregister(globalHotkeys + chromeHotkeys)
-        globalHotkeys = []
-        chromeHotkeys = []
+    private func switchBrowser(to browser: Browser) {
+        guard browser != chrome.browser else { return }
+        log.info("browser: \(browser.name, privacy: .public)")
+        let active = chromeActive
+        if active { setChromeActive(false) }
+        chrome = Chrome(browser: browser)
+        chrome.onFocusChange = { [weak self] in self?.updatePromoteHotkey() }
+        if started { setChromeActive(NSWorkspace.shared.frontmostApplication?.bundleIdentifier == browser.bundleID) }
+    }
 
-        do { globalHotkeys.append(try HotkeyCenter.shared.register(config.promoteHotkey) { [weak self] in self?.promote() }) }
-        catch { addError(error.localizedDescription) }
+    private func registerHotkeys() {
+        HotkeyCenter.shared.unregister(chromeHotkeys + (promoteHotkey.map { [$0] } ?? []))
+        chromeHotkeys = []
+        promoteHotkey = nil
+        if HotkeySpec.parse(config.promoteHotkey) == nil { addError("Invalid hotkey \"\(config.promoteHotkey)\"") }
 
         var bindings: [(String, () -> Void)] = []
-        if let hotkey = config.previousProfileHotkey { bindings.append((hotkey, { [weak self] in self?.cycleProfile(-1) })) }
-        if let hotkey = config.nextProfileHotkey { bindings.append((hotkey, { [weak self] in self?.cycleProfile(1) })) }
-        for profile in profiles {
-            if let hotkey = profileSettings(profile)?.hotkey { bindings.append((hotkey, { [weak self] in self?.focus(profile) })) }
+        // Profile switching needs the profile in window titles; Vivaldi leaves it out (use its Workspaces instead).
+        if chrome.browser.titlesShowProfile {
+            if let hotkey = config.previousProfileHotkey { bindings.append((hotkey, { [weak self] in self?.cycleProfile(-1) })) }
+            if let hotkey = config.nextProfileHotkey { bindings.append((hotkey, { [weak self] in self?.cycleProfile(1) })) }
+            for profile in profiles {
+                if let hotkey = profileSettings(profile)?.hotkey { bindings.append((hotkey, { [weak self] in self?.focus(profile) })) }
+            }
         }
         chromeBindings = bindings.filter { hotkey, _ in
             if HotkeySpec.parse(hotkey) != nil { return true }
@@ -136,16 +158,30 @@ final class AppModel: ObservableObject {
             return false
         }
         if chromeActive { activateChromeHotkeys() }
+        updatePromoteHotkey()
     }
 
     private func setChromeActive(_ active: Bool) {
         guard active != chromeActive else { return }
         chromeActive = active
         if active {
+            chrome.observeFocus()
             activateChromeHotkeys()
         } else {
             HotkeyCenter.shared.unregister(chromeHotkeys)
             chromeHotkeys = []
+        }
+        updatePromoteHotkey()
+    }
+
+    private func updatePromoteHotkey() {
+        let wanted = chromeActive && chrome.focusedWindowKind(profiles: profiles) == .app
+        if wanted, promoteHotkey == nil {
+            do { promoteHotkey = try HotkeyCenter.shared.register(config.promoteHotkey) { [weak self] in self?.promote() } }
+            catch { addError(error.localizedDescription) }
+        } else if !wanted, let id = promoteHotkey {
+            HotkeyCenter.shared.unregister([id])
+            promoteHotkey = nil
         }
     }
 
@@ -176,10 +212,26 @@ final class AppModel: ObservableObject {
         focus(next)
     }
 
-    func openMini(_ url: URL) {
-        let profile = miniProfile
-        log.info("mini window in \(profile.dir, privacy: .public): \(url.absoluteString, privacy: .public)")
-        chrome.openApp(url, profileDir: profile.dir)
+    func openLink(_ url: URL) {
+        let profile = currentProfile
+        log.info("\(self.config.openLinksIn.rawValue, privacy: .public) in \(profile.dir, privacy: .public): \(url.absoluteString, privacy: .public)")
+        switch config.openLinksIn {
+        case .mini: chrome.openApp(url, profileDir: profile.dir)
+        case .tab: chrome.openTab(url, profileDir: profile.dir)
+        }
+    }
+
+    var opensLinksInMini: Bool { config.openLinksIn == .mini }
+
+    func setOpensLinksInMini(_ mini: Bool) {
+        var updated = config
+        updated.openLinksIn = mini ? .mini : .tab
+        do {
+            try updated.encoded().write(to: Self.configURL)
+            config = updated
+        } catch {
+            flash("Couldn't save config: \(error.localizedDescription)")
+        }
     }
 
     /// Links (as default browser), files, and hop://open?url=… from the CLI.
@@ -192,17 +244,17 @@ final class AppModel: ObservableObject {
             if url.host == "reload" {
                 reload()
             } else if let target {
-                openMini(target)
+                openLink(target)
             }
         case "http", "https", "file":
-            openMini(url)
+            openLink(url)
         default:
             break
         }
     }
 
     func promote() {
-        chrome.promote(profiles: profiles, fallbackDir: miniProfile.dir) { [weak self] problem in
+        chrome.promote(profiles: profiles, fallbackDir: currentProfile.dir) { [weak self] problem in
             guard let problem else { return }
             log.info("promote failed: \(problem, privacy: .public)")
             NSSound.beep()

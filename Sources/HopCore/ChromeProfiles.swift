@@ -22,8 +22,7 @@ public enum LocalStateError: Error, CustomStringConvertible {
 }
 
 public enum LocalState {
-    public static let defaultURL = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Application Support/Google/Chrome/Local State")
+    public static let defaultURL = Browser.chrome.localStateURL
 
     public static func profiles(from data: Data) throws -> [ChromeProfile] {
         let root = try JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -63,16 +62,15 @@ public enum LocalState {
 }
 
 public enum ChromeWindowKind: Equatable, Sendable {
-    /// A regular browser window: "<page> - Google Chrome - <label>".
+    /// A regular browser window: "<page> - Google Chrome - <label>" (the marker depends on the browser).
     case normal
     /// An --app window: "<page> - <label>".
     case app
 }
 
 public enum WindowClassifier {
-    static let marker = "Google Chrome"
-
-    public static func classify(_ title: String, profiles: [ChromeProfile]) -> (kind: ChromeWindowKind, profile: ChromeProfile?) {
+    public static func classify(_ title: String, profiles: [ChromeProfile],
+                                marker: String = Browser.chrome.titleMarker) -> (kind: ChromeWindowKind, profile: ChromeProfile?) {
         // Longest label first so "Alex (Work)" wins over a profile labelled "Work".
         let byLabel = profiles.sorted { $0.titleLabel.count > $1.titleLabel.count }
         for p in byLabel {
@@ -82,7 +80,7 @@ public enum WindowClassifier {
         for p in byLabel where title == p.titleLabel || title.hasSuffix(" - " + p.titleLabel) {
             return (.app, p)
         }
-        // Chrome drops the profile label when only one profile exists.
+        // Chrome drops the profile label when only one profile exists; Vivaldi never shows it on normal windows.
         if title == marker || title.hasSuffix(" - " + marker) {
             return (.normal, profiles.count == 1 ? profiles.first : nil)
         }

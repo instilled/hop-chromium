@@ -20,16 +20,34 @@ extension AXUIElement {
     }
 }
 
-/// Everything Hop does to Chrome: Accessibility for windows, `open -na` for launching.
+/// Everything Hop does to the browser (Chrome, or another Chromium browser such as Vivaldi):
+/// Accessibility for windows, `open -na` for launching.
 final class Chrome {
-    static let bundleID = "com.google.Chrome"
+    let browser: Browser
 
     private typealias Window = (element: AXUIElement, title: String)
     private var lastLaunch: [String: Date] = [:]
+    private var observer: AXObserver?
+    private var observedPID: pid_t = 0
+
+    /// Called when Chrome's focused window changes (after `observeFocus()`).
+    var onFocusChange: (() -> Void)?
+
+    init(browser: Browser) {
+        self.browser = browser
+    }
+
+    deinit {
+        if let observer { CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .commonModes) }
+    }
+
+    private func classify(_ title: String, _ profiles: [ChromeProfile]) -> (kind: ChromeWindowKind, profile: ChromeProfile?) {
+        WindowClassifier.classify(title, profiles: profiles, marker: browser.titleMarker)
+    }
 
     private var runningApp: NSRunningApplication? {
         // `open -na` briefly spawns a second Chrome process that hands off to the first; prefer the oldest.
-        NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleID)
+        NSRunningApplication.runningApplications(withBundleIdentifier: browser.bundleID)
             .filter { !$0.isTerminated }
             .min { ($0.launchDate ?? .distantFuture) < ($1.launchDate ?? .distantFuture) }
     }
@@ -46,7 +64,7 @@ final class Chrome {
 
     private func normalWindows(of profile: ChromeProfile, in app: AXUIElement, profiles: [ChromeProfile]) -> [Window] {
         windows(app).filter {
-            let match = WindowClassifier.classify($0.title, profiles: profiles)
+            let match = classify($0.title, profiles)
             return match.kind == .normal && match.profile?.dir == profile.dir
         }
     }
@@ -55,7 +73,35 @@ final class Chrome {
     func frontmostProfile(profiles: [ChromeProfile]) -> ChromeProfile? {
         guard runningApp?.isActive == true, let app = axApp(),
               let focused: AXUIElement = app.value(kAXFocusedWindowAttribute) else { return nil }
-        return WindowClassifier.classify(focused.value(kAXTitleAttribute) ?? "", profiles: profiles).profile
+        return classify(focused.value(kAXTitleAttribute) ?? "", profiles).profile
+    }
+
+    /// Start watching Chrome's window focus. Cheap to call repeatedly; re-attaches if Chrome was relaunched.
+    func observeFocus() {
+        guard let pid = runningApp?.processIdentifier, pid != observedPID else { return }
+        if let old = observer {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(old), .commonModes)
+        }
+        observer = nil
+        var created: AXObserver?
+        let callback: AXObserverCallback = { _, _, _, refcon in
+            guard let refcon else { return }
+            Unmanaged<Chrome>.fromOpaque(refcon).takeUnretainedValue().onFocusChange?()
+        }
+        guard AXObserverCreate(pid, callback, &created) == .success, let created else { return }
+        let app = AXUIElementCreateApplication(pid)
+        let refcon = Unmanaged.passUnretained(self).toOpaque()
+        for notification in [kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification] {
+            AXObserverAddNotification(created, app, notification as CFString, refcon)
+        }
+        CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(created), .commonModes)
+        observer = created
+        observedPID = pid
+    }
+
+    func focusedWindowKind(profiles: [ChromeProfile]) -> ChromeWindowKind? {
+        guard let app = axApp(), let window: AXUIElement = app.value(kAXFocusedWindowAttribute) else { return nil }
+        return classify(window.value(kAXTitleAttribute) ?? "", profiles).kind
     }
 
     /// Profile of Chrome's frontmost normal window, whether or not Chrome is active: the profile last selected.
@@ -67,7 +113,7 @@ final class Chrome {
         let titles = candidates.map { ($0.value(kAXTitleAttribute) as String?) ?? "<nil>" }
         log.debug("current-profile candidates: \(titles, privacy: .public)")
         return candidates.lazy
-            .map { WindowClassifier.classify($0.value(kAXTitleAttribute) ?? "", profiles: profiles) }
+            .map { self.classify($0.value(kAXTitleAttribute) ?? "", profiles) }
             .first { $0.kind == .normal && $0.profile != nil }?
             .profile
     }
@@ -97,13 +143,17 @@ final class Chrome {
         launch(profileDir: profileDir, "--app=\(url.absoluteString)")
     }
 
+    func openTab(_ url: URL, profileDir: String) {
+        launch(profileDir: profileDir, url.absoluteString)
+    }
+
     /// Move the frontmost app-mode window's page into a normal tab of the same profile, then close it.
     func promote(profiles: [ChromeProfile], fallbackDir: String, completion: @escaping (String?) -> Void) {
-        guard let app = axApp() else { return completion("Chrome isn't running") }
+        guard let app = axApp() else { return completion("\(browser.name) isn't running") }
         guard let window: AXUIElement = app.value(kAXFocusedWindowAttribute) ?? windows(app).first?.element else {
-            return completion("No Chrome window")
+            return completion("No \(browser.name) window")
         }
-        let match = WindowClassifier.classify(window.value(kAXTitleAttribute) ?? "", profiles: profiles)
+        let match = classify(window.value(kAXTitleAttribute) ?? "", profiles)
         guard match.kind == .app else { return completion("Not a mini window") }
 
         // Chrome only builds its web accessibility tree on request.
@@ -153,7 +203,7 @@ final class Chrome {
     private func launch(profileDir: String, _ extra: String...) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        process.arguments = ["-na", "Google Chrome", "--args", "--profile-directory=\(profileDir)"] + extra
+        process.arguments = ["-na", browser.name, "--args", "--profile-directory=\(profileDir)"] + extra
         do { try process.run() } catch { log.error("launch failed: \(error.localizedDescription, privacy: .public)") }
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 import HopCore
 
 // hop <url | file | search terms>   open it in a Hop mini window
-// hop --sync-profiles               record Chrome's profiles in Hop's config
+// hop --sync-profiles               record the browser's profiles in Hop's config
 
 func fail(_ message: String, code: Int32 = 1) -> Never {
     FileHandle.standardError.write(Data("hop: \(message)\n".utf8))
@@ -25,18 +25,20 @@ func sendToApp(_ url: String) -> Int32 {
     }
 }
 
-/// Hop.app may be denied access to Chrome's Local State; a Terminal-launched process usually isn't.
+/// Hop.app may be denied access to the browser's Local State; a Terminal-launched process usually isn't.
 func syncProfiles() -> Never {
+    let url = Config.defaultURL
+    let config = (try? Data(contentsOf: url)).map { data in
+        do { return try JSONDecoder().decode(Config.self, from: data) } catch { fail("\(url.path) is invalid: \(error)") }
+    }
+    let localState = (config?.targetBrowser ?? .chrome).localStateURL
     let discovered: [ChromeProfile]
     do {
-        discovered = try LocalState.profiles(from: Data(contentsOf: LocalState.defaultURL))
+        discovered = try LocalState.profiles(from: Data(contentsOf: localState))
     } catch {
-        fail("can't read \(LocalState.defaultURL.path): \(error.localizedDescription)")
+        fail("can't read \(localState.path): \(error.localizedDescription)")
     }
-    let url = Config.defaultURL
-    let existing = (try? Data(contentsOf: url)).map { data in
-        do { return try JSONDecoder().decode(Config.self, from: data) } catch { fail("\(url.path) is invalid: \(error)") }
-    } ?? Config.makeDefault(for: discovered)
+    let existing = config ?? Config.makeDefault(for: discovered)
     do {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try existing.syncing(discovered).encoded().write(to: url)
