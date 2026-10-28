@@ -19,7 +19,7 @@ opens and closes Chrome windows through the macOS Accessibility API.
 | Shortcut | Active | Does |
 |---|---|---|
 | ⌥⌘← / ⌥⌘→ | only while Chrome is frontmost | Previous / next Chrome profile ("Space"): raise its window, or open one |
-| ⌥⇧P | anywhere | Promote the front mini window: open its page as a normal tab in the same profile, close the mini window |
+| ⌘O | only while a mini window has focus | Promote it, like Arc's *Open in Arc*: open its page as a normal tab in the same profile, close the mini window |
 
 **Mini windows** are Chrome `--app` windows with no tabs or toolbar. They open in the **current profile**, the one
 whose Chrome window you used last:
@@ -43,7 +43,7 @@ no AppleScript/Automation access is used.
 
 ```sh
 git clone https://github.com/instilled/hop-chrome && cd hop-chrome
-scripts/build.sh --install   # builds dist/Hop.app, copies it to /Applications, launches it
+scripts/install.sh   # builds dist/Hop.app, copies it to /Applications, launches it
 ```
 
 Plain `scripts/build.sh` only builds `dist/Hop.app`.
@@ -83,14 +83,15 @@ Hop covers the keyboard side. These Chrome settings cover the rest:
 
 1. **Tabs on the left.** Chrome 146+ has built-in vertical tabs: right-click the tab strip → *Show Tabs Vertically*,
    or *View → Show Tabs Vertically*, or Settings → Appearance → Tab position → Vertical. Collapse the strip to icons
-   for an Arc-like slim sidebar.
+   for an Arc-like slim sidebar. Or use the [Hop Sidebar extension](#chrome-extension-hop-sidebar) for a sidebar
+   with your bookmarks above the tabs.
 2. **One profile per Space.** Create a Chrome profile for each Arc Space (e.g. Work, Personal): profile menu →
    *Add*. Give each its own color (Customize Chrome → *Change theme*) so you can tell them apart at a glance, as
    Arc's Space colors did. ⌥⌘←/→ then walks through them.
 3. **Pinned tabs and folders.** Right-click a tab → *Pin* for Arc's pinned tabs. Use tab groups (right-click →
    *Add tab to new group*) as Arc folders; collapse them to keep the sidebar tidy.
 4. **Little Arc.** Make Hop the default browser (see above). Links from Slack, Mail and so on open in a mini
-   window in your current profile; ⌥⇧P keeps the page as a tab.
+   window in your current profile; ⌘O keeps the page as a tab.
 5. **Clean chrome.** Hide the bookmarks bar (⌘⇧B). Use ⌘L as Arc's command bar, and ⌘⇧A (tab search) to jump to
    any open tab.
 6. **Tab decay.** Arc archived idle tabs. The closest Chrome setting is Settings → Performance → *Memory Saver*,
@@ -102,10 +103,12 @@ Hop covers the keyboard side. These Chrome settings cover the rest:
 
 ```json
 {
+  "browser": "chrome",
   "miniProfile": "Default",
-  "promoteHotkey": "opt+shift+p",
+  "promoteHotkey": "cmd+o",
   "previousProfileHotkey": "cmd+opt+left",
   "nextProfileHotkey": "cmd+opt+right",
+  "openLinksIn": "mini",
   "profileOrder": ["Default", "Personal"],
   "profiles": {
     "Personal": { "hotkey": "ctrl+2" },
@@ -116,8 +119,10 @@ Hop covers the keyboard side. These Chrome settings cover the rest:
 
 | Key | Meaning |
 |---|---|
+| `browser` | `"chrome"` (default) or `"vivaldi"`. Run `hop --sync-profiles` after changing it. In Vivaldi, profile switching is off (its window titles don't name the profile); mini windows and ⌘O work. |
 | `previousProfileHotkey`, `nextProfileHotkey` | Profile cycling, active only while Chrome is frontmost. `null` disables. |
-| `promoteHotkey` | Global. Missing or `null` means the default. |
+| `promoteHotkey` | Active only while Chrome's focused window is a mini window, so ⌘O stays *Open File…* everywhere else. Missing or `null` means the default. |
+| `openLinksIn` | `"mini"` (default) opens links from other apps and `hop <url>` in a mini window, `"tab"` as a normal tab. Both use the current profile. Also a menu toggle. |
 | `profileOrder` | Optional cycle order. Defaults to every profile, `Default` first. |
 | `profiles.<p>.hotkey` | Optional direct jump to a profile, active only while Chrome is frontmost. Pressing it again cycles that profile's windows. |
 | `profiles.<p>.titleLabel` | Optional override of the window-title suffix used to recognise the profile (see below). |
@@ -128,6 +133,59 @@ Profiles are referenced by directory (`Default`, `Profile 5`) or display name (`
 `name`/`titleLabel` entries that `hop --sync-profiles` writes. Hotkeys are written as modifiers `cmd`, `opt`/`alt`,
 `ctrl`, `shift` plus one character or one of `space return tab esc delete left right up down f1`…`f12`. Characters
 follow your current keyboard layout.
+
+## Chrome extension: Hop Sidebar
+
+`extension/` is an optional Chrome extension, separate from the app. It's an Arc-style sidebar in Chrome's side panel:
+
+- **Pinned:** bookmarks in a bookmarks folder named **Pinned** (create it anywhere) show as a grid of icons at the
+  top, like Arc's favorites. ⌘1–⌘6 select the first six.
+- **Bookmarks** of the bookmarks bar, plus *Other* / *Mobile* as folders (open state is remembered).
+- **Bookmarks open like Arc's pinned tabs.** A bookmark (pinned or not) opens one tab that stays bound to it: click
+  the bookmark again and you're back in that tab, even after browsing elsewhere in it. Its tab shows on the bookmark,
+  not in the tab list; **×** or middle-click on the bookmark closes it. ⌘-click opens a plain background tab instead.
+- **Unread badges** on bookmarks whose tab is open, read from the tab title the way Gmail (`Inbox (3)`), WhatsApp
+  (`(12) WhatsApp`), Outlook, Slack and others write it. Calendar titles carry no count, so it gets no badge.
+- **Edit:** right-click a bookmark, folder or tile to rename it. Drag tiles to reorder them; drag a bookmark onto the
+  grid to pin it.
+- **Tabs** of the current window, with tab groups. Click to switch; **×** or middle-click closes.
+- **Hide inactive** (toggle next to *Tabs*, off by default): Chrome can't hide tabs, so Hop moves every tab except the
+  active one into a collapsed group named "Hop". Chrome's tab bar then shows just that small chip and the current tab;
+  the sidebar still lists everything. This only happens while the sidebar is open in that window: close it (⌃S)
+  and the tabs come back to Chrome's tab bar. Turning the setting off ungroups them too. While on, the list keeps tabs in opening order.
+
+Install it:
+
+1. `chrome://extensions` → turn on *Developer mode* → *Load unpacked* → pick the repo's `extension/` folder.
+   Do this in each profile you want it in.
+2. Put the side panel on the left: Chrome Settings → Appearance → *Side panel* → *Show on left*.
+3. Open it with the toolbar button (pin it via the puzzle icon), or toggle it with ⌃S, like Arc's ⌘S, to keep it
+   hidden until you need it. Shortcuts are set at `chrome://extensions/shortcuts`. Chrome allows only four suggested
+   shortcuts per extension, so ⌃S and ⌘1–⌘3 come preset; assign ⌘4–⌘6 for the remaining pinned bookmarks yourself.
+   Width: drag the panel's inner edge; Chrome won't go below its minimum width.
+
+Limitations: Chrome won't let an extension hide the tab strip itself, or open the side panel in mini (app) windows.
+⌘1–⌘6 are meant to take over Chrome's "go to tab N"; if Chrome keeps its own, pick other keys at `chrome://extensions/shortcuts`. The bookmark ↔ tab bindings reset when Chrome restarts. A tab group you name
+"Hop" is treated as the hidden group. `javascript:` bookmarklets don't run from the sidebar. After `git pull`, click
+the reload icon on the extension's card.
+
+### Vivaldi
+
+Hop Sidebar also runs in Vivaldi (tested with 8.2), where it becomes a Vivaldi panel. That panel can be narrower than
+Chrome's 360 px side-panel minimum, and with `vivaldi/hide-panel-bar.css` it replaces Vivaldi's panel bar entirely:
+
+1. `vivaldi://extensions` → *Developer mode* → *Load unpacked* → `extension/`. Vivaldi adds it to the panel bar.
+2. `vivaldi://experiments` → enable *Allow for using CSS modifications*, then restart Vivaldi.
+3. Settings → Appearance → *Custom UI Modifications* → choose the repo's `vivaldi/` folder, then restart again.
+4. Open or close Hop with Quick Commands (⌘E → *Toggle Current Panel*), or bind that command in Settings → Keyboard.
+   Keep the panel non-floating (⌘E → *Toggle Floating Panel*), or it closes whenever you click the page.
+
+The CSS hides the panel bar, lets the panel take its place with Vivaldi's usual 6 px gap, and drops the web panel's
+title row (for every web panel). Hide Vivaldi's own tab bar as well if the sidebar's tab list is enough.
+
+The Hop app can drive Vivaldi too: set `"browser": "vivaldi"` in the config and run `hop --sync-profiles`. Mini
+windows, links (as default browser) and ⌘O promote then go to Vivaldi. Profile switching stays off there, since
+Vivaldi doesn't put the profile name in normal window titles; use Vivaldi's Workspaces instead.
 
 ## How it works
 
@@ -161,8 +219,9 @@ follow your current keyboard layout.
 - **⌥⌘←/→ shadows Chrome's previous/next-tab shortcut.** Use ⌃⇧Tab / ⌃Tab or ⌘⇧[ / ⌘⇧], or rebind in the config.
 - **Repeated presses:** a second press within 3 s of Hop opening a window for a profile is ignored, to avoid
   duplicate windows.
-- **Promote** acts on Chrome's focused window only. On a normal window it beeps and shows "Not a mini window" in the
-  menu. It turns Chrome's accessibility tree on for up to 2 s.
+- **Promote** acts on Chrome's focused window only. ⌘O is registered only while that is a mini window (Hop watches
+  Chrome's window focus via Accessibility); the menu item on a normal window beeps and shows "Not a mini window".
+  Promoting turns Chrome's accessibility tree on for up to 2 s.
 - A hotkey another app already owns can't be registered; the menu lists it under *Config Problems*.
 
 ## Development
@@ -173,7 +232,7 @@ swift scripts/make-icon.swift # regenerate Resources/AppIcon.icns
 log stream --predicate 'subsystem == "com.instilled.hop"' --level debug
 ```
 
-Non-goals: tab management, sync, an updater, a settings UI, changes to Chromium.
+Non-goals for the app: tab management (that's the extension's job), sync, an updater, a settings UI, changes to Chromium.
 
 ## License
 
