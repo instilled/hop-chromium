@@ -7,13 +7,16 @@
 </head>
 <body>
   <nav id="pinned" class="pinned"></nav>
+  <div id="peek" class="peek" hidden></div>
+  <div id="menu" class="menu" hidden></div>
 
   <section>
     <ul id="bookmarks" class="list"></ul>
   </section>
 
   <section>
-    <h2>Tabs <button id="hide-inactive" class="toggle" title="Keep only the active tab in Chrome's tab bar">Hide inactive</button></h2>
+    <div class="divider"><button id="clear" class="clear" title="Close open tabs that aren't bookmarks, pinned or in a group">Clear</button></div>
+    <button id="new-tab" class="row new-tab"><span class="icon"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="title">New Tab</span></button>
     <ul id="tabs" class="list"></ul>
   </section>
 

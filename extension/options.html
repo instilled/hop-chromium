@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hop Sidebar Options</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; padding: 16px; font: 13px/1.4 system-ui, -apple-system, sans-serif; min-width: 320px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .field { display: flex; gap: 8px; align-items: center; }
+    input[type=color] { width: 36px; height: 28px; padding: 0; border: 0; background: none; }
+    input[type=text] { flex: 1; height: 28px; padding: 0 8px; font: inherit; }
+    p { color: GrayText; margin: 8px 0 0; }
+    button { height: 28px; font: inherit; }
+  </style>
+</head>
+<body>
+  <label for="background">Background</label>
+  <div class="field">
+    <input type="color" id="picker" aria-label="Pick a colour">
+    <input type="text" id="background" spellcheck="false" placeholder="#35343E">
+    <button id="reset">Default</button>
+  </div>
+  <p>Any CSS colour, e.g. <code>#130E21</code>, or <code>transparent</code> to show the browser's panel colour.
+     Empty uses the default (#35343E in dark mode, light grey in light mode).</p>
+  <label for="calendar" style="margin-top: 20px">Calendar preview</label>
+  <div class="field">
+    <input type="text" id="calendar" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics">
+  </div>
+  <p>Your calendar's secret iCal address: Google Calendar → Settings → your calendar → <em>Integrate calendar</em> →
+     <em>Secret address in iCal format</em>. Hovering the pinned Calendar tile then shows today's and tomorrow's
+     meetings. Stored only in this browser profile. <span id="calendar-status"></span></p>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -4,21 +4,84 @@
   "version": "0.2.0",
   "description": "Arc-style sidebar: pinned bookmarks, bookmarks and this window's tabs.",
   "minimum_chrome_version": "116",
-  "permissions": ["sidePanel", "tabs", "tabGroups", "bookmarks", "favicon", "storage"],
-  "background": { "service_worker": "background.js", "type": "module" },
-  "side_panel": { "default_path": "sidebar.html" },
+  "permissions": [
+    "sidePanel",
+    "tabs",
+    "tabGroups",
+    "bookmarks",
+    "favicon",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://calendar.google.com/*",
+    "https://chat.google.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "action": {
     "default_title": "Hop Sidebar",
-    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" }
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
   },
   "commands": {
-    "toggle-sidebar": { "suggested_key": { "default": "Ctrl+Shift+S", "mac": "MacCtrl+S" }, "description": "Show or hide the sidebar" },
-    "pinned-1": { "suggested_key": { "default": "Ctrl+1", "mac": "Command+1" }, "description": "Pinned bookmark 1" },
-    "pinned-2": { "suggested_key": { "default": "Ctrl+2", "mac": "Command+2" }, "description": "Pinned bookmark 2" },
-    "pinned-3": { "suggested_key": { "default": "Ctrl+3", "mac": "Command+3" }, "description": "Pinned bookmark 3" },
-    "pinned-4": { "description": "Pinned bookmark 4" },
-    "pinned-5": { "description": "Pinned bookmark 5" },
-    "pinned-6": { "description": "Pinned bookmark 6" }
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "MacCtrl+S"
+      },
+      "description": "Show or hide the sidebar"
+    },
+    "pinned-1": {
+      "suggested_key": {
+        "default": "Ctrl+1",
+        "mac": "Command+1"
+      },
+      "description": "Pinned bookmark 1"
+    },
+    "pinned-2": {
+      "suggested_key": {
+        "default": "Ctrl+2",
+        "mac": "Command+2"
+      },
+      "description": "Pinned bookmark 2"
+    },
+    "pinned-3": {
+      "suggested_key": {
+        "default": "Ctrl+3",
+        "mac": "Command+3"
+      },
+      "description": "Pinned bookmark 3"
+    },
+    "pinned-4": {
+      "description": "Pinned bookmark 4"
+    },
+    "pinned-5": {
+      "description": "Pinned bookmark 5"
+    },
+    "pinned-6": {
+      "description": "Pinned bookmark 6"
+    }
   },
-  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }

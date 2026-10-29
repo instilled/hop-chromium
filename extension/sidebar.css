@@ -1,5 +1,9 @@
 :root {
+  /* Overridden by the Background option (options.html). */
   --bg: #f5f5f7;
+  --field: #fff;
+  --peek-bg: #fff;
+  --peek-border: rgba(0, 0, 0, 0.12);
   --fg: #1d1d1f;
   --muted: #86868b;
   --hover: rgba(0, 0, 0, 0.06);
@@ -10,7 +14,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1e1e20;
+    --bg: #35343E;
+    --field: rgba(0, 0, 0, 0.35);
+    /* Lighter than the sidebar (whatever its colour option) so the card stands out. */
+    --peek-bg: color-mix(in srgb, var(--bg) 82%, white);
+    --peek-border: rgba(255, 255, 255, 0.16);
     --fg: #ececee;
     --muted: #8e8e93;
     --hover: rgba(255, 255, 255, 0.07);
@@ -21,9 +29,12 @@
 
 * { box-sizing: border-box; }
 
+html { background: transparent; }
+
 body {
+  position: relative;
   margin: 0;
-  padding: 8px;
+  padding: 12px 3px 16px;
   background: var(--bg);
   color: var(--fg);
   font: 14px/1.25 system-ui, -apple-system, sans-serif;
@@ -44,8 +55,8 @@ ul { list-style: none; margin: 0; padding: 0; }
   align-items: center;
   gap: 8px;
   width: 100%;
-  height: 32px;
-  padding: 0 4px 0 8px;
+  height: 38px;
+  padding: 0 6px 0 10px;
   border: 0;
   border-radius: 7px;
   background: none;
@@ -54,6 +65,7 @@ ul { list-style: none; margin: 0; padding: 0; }
   text-align: left;
   cursor: default;
 }
+.row + .row, li + li { margin-top: 2px; }
 .row:hover { background: var(--hover); }
 .row.active { background: var(--active); box-shadow: var(--active-shadow); }
 .row.discarded .title { color: var(--muted); }
@@ -93,8 +105,10 @@ img.icon { object-fit: contain; }
 /* Bookmark folders. */
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
-details > summary .icon::before { content: "›"; font-size: 15px; transition: transform 0.12s; }
-details[open] > summary .icon::before { transform: rotate(90deg); }
+.folder-icon svg { display: block; }
+details > summary .folder-icon .opened,
+details[open] > summary .folder-icon .closed { display: none; }
+details[open] > summary .folder-icon .opened { display: block; }
 details > ul { padding-left: 14px; }
 
 /* Tab groups. */
@@ -135,12 +149,12 @@ details > ul { padding-left: 14px; }
 .pinned {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 .pinned:empty { display: none; }
 .pinned button {
-  height: 44px;
+  height: 50px;
   border: 0;
   border-radius: 10px;
   background: var(--hover);
@@ -151,18 +165,25 @@ details > ul { padding-left: 14px; }
 .pinned button.active { background: var(--active); box-shadow: var(--active-shadow); }
 .pinned button:not(.open) img { opacity: 0.7; }
 
-/* Tabs heading with the hide-inactive toggle. */
-h2 { display: flex; align-items: center; justify-content: space-between; }
-.toggle {
+/* Divider above the tab list, with Arc's "Clear" at its end. */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 8px 6px;
+}
+.divider::before { content: ""; flex: 1; height: 1px; background: var(--hover); }
+.clear {
   border: 0;
   border-radius: 5px;
   padding: 2px 6px;
   background: none;
   color: var(--muted);
   font: inherit;
+  font-size: 12px;
 }
-.toggle:hover { background: var(--hover); }
-.toggle.on { background: var(--active); color: var(--fg); box-shadow: var(--active-shadow); }
+.clear:hover { background: var(--hover); color: var(--fg); }
+.clear:disabled { visibility: hidden; }
 
 /* Rename field (right-click a bookmark, folder or tile). */
 .rename {
@@ -172,13 +193,13 @@ h2 { display: flex; align-items: center; justify-content: space-between; }
   padding: 0 6px;
   border: 1px solid var(--muted);
   border-radius: 5px;
-  background: var(--bg);
+  background: var(--field);
   color: var(--fg);
   font: inherit;
   outline: none;
   user-select: text;
 }
-.rename.tile { grid-column: 1 / -1; height: 44px; border-radius: 10px; }
+.rename.tile { grid-column: 1 / -1; height: 50px; border-radius: 10px; }
 
 /* Drag and drop into / within the pinned grid. */
 .pinned button.drop { outline: 2px solid var(--muted); outline-offset: -2px; }
@@ -200,3 +221,89 @@ h2 { display: flex; align-items: center; justify-content: space-between; }
 }
 .pinned button { position: relative; }
 .pinned .badge { position: absolute; top: 3px; right: 3px; }
+
+/* "+ New Tab" row under the divider, like Arc. */
+.new-tab { color: var(--muted); }
+.new-tab .icon svg { display: block; }
+
+/* Preview card for Gmail / Calendar tiles. */
+.peek {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  z-index: 10;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--peek-bg);
+  border: 1px solid var(--peek-border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+/* Pointer up to the tile the card belongs to (--peek-arrow-x is set from JS). */
+.peek::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: var(--peek-arrow-x, 24px);
+  width: 10px;
+  height: 10px;
+  background: var(--peek-bg);
+  border-left: 1px solid var(--peek-border);
+  border-top: 1px solid var(--peek-border);
+  transform: rotate(45deg);
+}
+.peek { overflow: visible; }
+.peek-scroll { max-height: 70vh; overflow-y: auto; }
+.peek[hidden] { display: none; }
+.peek-head { padding: 6px 8px 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.peek-item {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.peek-item:hover { background: var(--hover); }
+.peek-line { display: flex; align-items: baseline; gap: 6px; }
+.peek-strong { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.peek-time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.peek-now { font-size: 11px; font-weight: 600; color: #fff; background: #e5484d; border-radius: 6px; padding: 0 5px; }
+.peek-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.peek-sub { color: var(--muted); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.peek-empty { padding: 8px; color: var(--muted); }
+.peek-link { border: 0; background: none; color: var(--fg); text-decoration: underline; font: inherit; padding: 0; }
+.peek-item:not(.unread) .peek-strong { font-weight: 500; }
+.peek-item.unread .peek-strong::after { content: " •"; color: #e5484d; }
+
+/* Drop indicators for dragging bookmarks, tabs and pages into the list. */
+.row.drop-before { box-shadow: inset 0 2px 0 var(--fg); }
+.row.drop-after { box-shadow: inset 0 -2px 0 var(--fg); }
+.row.drop-into { background: var(--active); box-shadow: inset 0 0 0 1px var(--muted); }
+
+/* Right-click menu. */
+.menu {
+  position: absolute;
+  z-index: 20;
+  min-width: 140px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--peek-bg);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--hover);
+}
+.menu[hidden] { display: none; }
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.menu-item:hover { background: var(--hover); }
+.menu-item.danger { color: #ff6b6b; }
