@@ -14,6 +14,36 @@
 }
 #panels-container.left .panel { padding-left: 0 !important; }
 
+/* Vivaldi won't let a panel be dragged narrower than 260px; fix the width here instead (dragging then has no effect).
+   Change --hop-panel-width to taste, then restart Vivaldi. Remove this block to go back to dragging. */
+#panels-container.left.expanded {
+  --hop-panel-width: 220px;
+  width: var(--hop-panel-width) !important;
+  min-width: 0 !important;
+  flex-basis: var(--hop-panel-width) !important;
+}
+#panels-container.left.expanded .panel-group,
+#panels-container.left.expanded .webpanel-content {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+/* The page inside keeps the width it was created with until the webview's size changes (a click does it).
+   Nudge the size once after the panel appears so the page lays out at the panel's real width. */
+#panels-container.left.expanded webview {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  animation: hop-relayout 0.2s 0.6s both;
+}
+@keyframes hop-relayout {
+  from { width: calc(100% - 2px); }
+  to { width: 100%; }
+}
+
+/* No divider line between the panel and the page. */
+#panels-container.left .panel-group,
+#panels-container.left.icons { border-right: 0 !important; box-shadow: none !important; }
+
 /* Keep Vivaldi's usual 6px gap to the window edge, as on the page's other sides. */
 #panels-container.left.expanded { margin-left: 6px !important; }
 
