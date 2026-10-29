@@ -162,9 +162,19 @@ final class Chrome {
             app.set("AXManualAccessibility", kCFBooleanFalse)
             guard let self else { return }
             guard let url else { return completion("Couldn't read URL") }
-            self.launch(profileDir: match.profile?.dir ?? fallbackDir, url.absoluteString)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                if let close: AXUIElement = window.value(kAXCloseButtonAttribute) { close.perform(kAXPressAction) }
+            let profileDir = match.profile?.dir ?? fallbackDir
+            // The browser puts the tab in its last active normal window, and with the mini window focused it may
+            // open a new window instead. So raise the profile's normal window first (any one if titles don't say).
+            let target = self.windows(app).first {
+                let m = self.classify($0.title, profiles)
+                return m.kind == .normal && (m.profile == nil || m.profile?.dir == profileDir)
+            }
+            if let target { self.raise(target.element, in: app) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (target == nil ? 0 : 0.15)) {
+                self.launch(profileDir: profileDir, url.absoluteString)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    if let close: AXUIElement = window.value(kAXCloseButtonAttribute) { close.perform(kAXPressAction) }
+                }
             }
             completion(nil)
         }
