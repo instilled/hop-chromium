@@ -146,13 +146,20 @@ follow your current keyboard layout.
   not in the tab list; **×** or middle-click on the bookmark closes it. ⌘-click opens a plain background tab instead.
 - **Unread badges** on bookmarks whose tab is open, read from the tab title the way Gmail (`Inbox (3)`), WhatsApp
   (`(12) WhatsApp`), Outlook, Slack and others write it. Calendar titles carry no count, so it gets no badge.
-- **Edit:** right-click a bookmark, folder or tile to rename it. Drag tiles to reorder them; drag a bookmark onto the
-  grid to pin it.
+- **Previews** (like Arc's peeks): hover a pinned Gmail tile for the newest unread emails (from Gmail's unread feed,
+  using your existing login), or a pinned Google Calendar tile for today's remaining and tomorrow's meetings (from the
+  calendar's *secret iCal address*, set in Options), or a pinned Google Chat tile for recent conversations (read from
+  the open Chat tab's Home list, so that tab has to be open; Chat has no feed). Click an entry to open it in the tile's
+  tab. Previews are cached and prefetched, so the card appears instantly and refreshes in the background.
+- **Options** (the extension's *Options* / *Extension options*): background colour, any CSS colour or `transparent`;
+  default `#35343E` in dark mode. Changes apply immediately.
+- **Edit:** right-click a bookmark, folder or tile for *Rename · New Folder · Delete* (empty space: *New Folder*).
+  Drag bookmarks and folders to rearrange them (onto the middle of a folder to put them inside). Drop a tab from the
+  list, or a page or link from anywhere, to bookmark it at that spot; a dropped tab becomes that bookmark's tab.
+- **Restarts:** bookmark tabs restored by the browser are matched back to their bookmarks by address.
 - **Tabs** of the current window, with tab groups. Click to switch; **×** or middle-click closes.
-- **Hide inactive** (toggle next to *Tabs*, off by default): Chrome can't hide tabs, so Hop moves every tab except the
-  active one into a collapsed group named "Hop". Chrome's tab bar then shows just that small chip and the current tab;
-  the sidebar still lists everything. This only happens while the sidebar is open in that window: close it (⌃S)
-  and the tabs come back to Chrome's tab bar. Turning the setting off ungroups them too. While on, the list keeps tabs in opening order.
+- **Clear** (at the end of the divider above the tab list), like Arc: closes the window's loose tabs. Bookmark tabs,
+  Chrome's pinned tabs and tabs in tab groups stay; ⌘⇧T brings closed tabs back. **+ New Tab** sits below it.
 
 Install it:
 
@@ -165,8 +172,7 @@ Install it:
    Width: drag the panel's inner edge; Chrome won't go below its minimum width.
 
 Limitations: Chrome won't let an extension hide the tab strip itself, or open the side panel in mini (app) windows.
-⌘1–⌘6 are meant to take over Chrome's "go to tab N"; if Chrome keeps its own, pick other keys at `chrome://extensions/shortcuts`. The bookmark ↔ tab bindings reset when Chrome restarts. A tab group you name
-"Hop" is treated as the hidden group. `javascript:` bookmarklets don't run from the sidebar. After `git pull`, click
+⌘1–⌘6 are meant to take over Chrome's "go to tab N"; if Chrome keeps its own, pick other keys at `chrome://extensions/shortcuts`. `javascript:` bookmarklets don't run from the sidebar. After `git pull`, click
 the reload icon on the extension's card.
 
 ### Vivaldi
@@ -180,8 +186,12 @@ Chrome's 360 px side-panel minimum, and with `vivaldi/hide-panel-bar.css` it rep
 4. Open or close Hop with Quick Commands (⌘E → *Toggle Current Panel*), or bind that command in Settings → Keyboard.
    Keep the panel non-floating (⌘E → *Toggle Floating Panel*), or it closes whenever you click the page.
 
-The CSS hides the panel bar, lets the panel take its place with Vivaldi's usual 6 px gap, and drops the web panel's
-title row (for every web panel). Hide Vivaldi's own tab bar as well if the sidebar's tab list is enough.
+The CSS hides the panel bar, lets the panel take its place with Vivaldi's usual 6 px gap, drops the web panel's
+title row (for every web panel) and removes the panel's border and shadow. It also fixes the panel at 220 px
+(`--hop-panel-width`): Vivaldi won't let a panel be dragged below 260 px, so dragging has no effect while this is set.
+After changing it, also update Vivaldi's saved panel
+width (Preferences → `vivaldi.panels.window_defaults.width`, with Vivaldi quit) or the page renders at the old width
+until you click into it. Hide Vivaldi's own tab bar as well if the sidebar's tab list is enough.
 
 The Hop app can drive Vivaldi too: set `"browser": "vivaldi"` in the config and run `hop --sync-profiles`. Mini
 windows, links (as default browser) and ⌘O promote then go to Vivaldi. Profile switching stays off there, since
