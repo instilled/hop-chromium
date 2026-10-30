@@ -15,7 +15,7 @@ func sendToApp(_ url: String) -> Int32 {
     let bundle = executable.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     let open = Process()
     open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-    open.arguments = (bundle.pathExtension == "app" ? ["-g", "-a", bundle.path] : ["-g", "-b", "com.instilled.hop"]) + [url]
+    open.arguments = (bundle.pathExtension == "app" ? ["-g", "-a", bundle.path] : ["-g", "-b", "instilled.hop"]) + [url]
     do {
         try open.run()
         open.waitUntilExit()

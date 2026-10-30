@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.instilled.hop</string>
+	<string>instilled.hop</string>
 	<key>CFBundleName</key>
 	<string>Hop</string>
 	<key>CFBundleDisplayName</key>

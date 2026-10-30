@@ -6,7 +6,7 @@ import HopCore
 import ServiceManagement
 import UniformTypeIdentifiers
 
-let log = Logger(subsystem: "com.instilled.hop", category: "app")
+let log = Logger(subsystem: "instilled.hop", category: "app")
 
 final class AppModel: ObservableObject {
     static let shared = AppModel()

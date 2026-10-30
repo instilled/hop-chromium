@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Builds dist/Hop.app. Usage: scripts/build.sh [--install]
+# Builds dist/Hop.app. Usage: ./build.sh [--install] at the repo root
 #   --install  copy to /Applications and (re)launch it
-# Env: BUNDLE_ID (default com.instilled.hop).
+# Env: BUNDLE_ID (default instilled.hop).
 # Signing: $CODESIGN_IDENTITY, else the first "Apple Development" identity, else ad-hoc.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-BUNDLE_ID=${BUNDLE_ID:-com.instilled.hop}
+BUNDLE_ID=${BUNDLE_ID:-instilled.hop}
 APP=dist/Hop.app
 
 swift build -c release --product Hop
