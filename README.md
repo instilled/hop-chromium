@@ -1,122 +1,72 @@
 # Hop Sidebar
 
-An Arc-style sidebar for Vivaldi: pinned tiles with previews, your bookmarks as Arc-style pinned tabs, and the
-window's tabs below, in a slim panel that replaces Vivaldi's panel bar. It's a plain browser extension plus a small
-Vivaldi UI mod. Nothing to build.
+An Arc-style sidebar for Vivaldi: pinned tiles with previews, bookmarks that act like Arc's pinned tabs, and the
+window's tabs, in a slim panel that replaces Vivaldi's panel bar. A plain extension plus a CSS mod; nothing to build.
 
 ```
-install.sh                            sets up Hop Sidebar in Vivaldi (below)
-build.sh                              builds the optional macOS app
-code/hop-chromium-extension/          the extension (Load unpacked this folder)
+install.sh                            sets up Hop Sidebar in Vivaldi
+code/hop-chromium-extension/          the extension
 code/hop-chromium-extension/vivaldi/  the Vivaldi UI mod (CSS)
-code/hop-macos/                       Hop for macOS, an older companion app (see the end)
+code/hop-macos/, build.sh             Hop for macOS, an older companion app (see the end)
 ```
 
 ## What it does
 
-- **Pinned:** bookmarks in a bookmarks folder named **Pinned** (create it anywhere) show as a grid of icons at the
-  top, like Arc's favorites. ⌘1–⌘6 select the first six.
-- **Bookmarks** of the bookmarks bar, plus *Other* / *Mobile* as folders (open state is remembered). Vivaldi's Trash
-  is hidden.
-- **Bookmarks open like Arc's pinned tabs.** A bookmark (pinned or not) opens one tab that stays bound to it: click
-  the bookmark again and you're back in that tab, even after browsing elsewhere in it. Its tab shows on the bookmark,
-  not in the tab list; **×** or middle-click on the bookmark closes it. ⌘-click opens a plain background tab instead.
-- **Unread badges** on bookmarks whose tab is open, read from the tab title the way Gmail (`Inbox (3)`), WhatsApp
-  (`(12) WhatsApp`), Outlook, Slack and others write it.
-- **Previews** (like Arc's peeks): hover a pinned Gmail tile for the newest unread emails (from Gmail's unread feed,
-  using your existing login), a pinned Google Calendar tile for today's remaining and tomorrow's meetings (from the
-  calendar's *secret iCal address*, set in Options), or a pinned Google Chat tile for recent conversations (read from
-  the open Chat tab, so that tab has to be open; Chat has no feed). Click an entry to open it in the tile's tab.
-  Previews are cached and prefetched, so the card appears instantly and refreshes in the background.
-- **Edit:** right-click a bookmark, folder or tile for *Rename · New Folder · Delete* (empty space: *New Folder*).
-  Drag bookmarks and folders to rearrange them (onto the middle of a folder to put them inside). Drop a tab from the
-  list, or a page or link from anywhere, to bookmark it at that spot; a dropped tab becomes that bookmark's tab.
-- **Restarts:** bookmark tabs restored by the browser are matched back to their bookmarks by address.
-- **Tabs** of the current window, with tab groups. Click to switch; **×** or middle-click closes.
-- **Clear** (at the end of the divider above the tab list), like Arc: closes the window's loose tabs. Bookmark tabs,
-  pinned tabs and tabs in tab groups stay; ⌘⇧T brings closed tabs back. **+ New Tab** sits below it.
-- **Options** (the extension's *Options*): background colour, any CSS colour or `transparent` (default `#35343E` in
-  dark mode), and the calendar's secret iCal address.
+- **Pinned:** bookmarks in a folder named **Pinned** show as a grid of icons at the top. ⌘1–⌘6 select the first six.
+- **Bookmarks** of the bookmarks bar, plus *Other* / *Mobile*. Each opens one tab bound to it, like Arc's pinned
+  tabs: click it again to return to that tab. **×** or middle-click closes it; ⌘-click opens a plain tab.
+- **Unread badges** from tab titles (Gmail, WhatsApp, Outlook, Slack, …).
+- **Previews** on hover: unread Gmail, today's and tomorrow's Calendar events (secret iCal address in Options),
+  recent Google Chat conversations (Chat tab must be open). Cached, so they show instantly.
+- **Edit:** right-click for *Rename · New Folder · Delete*; drag to rearrange; drop a tab or link to bookmark it.
+- **Tabs** of the window, with tab groups, below. **Clear** closes loose tabs, like Arc; **+ New Tab** below it.
+- **Options:** background colour (default `#35343E`) and the calendar address.
 
 ## Install
 
 Tested with Vivaldi 8.2 on macOS.
 
-1. Get the code and quit Vivaldi (⌘Q):
+1. Quit Vivaldi, then:
    ```sh
-   git clone https://github.com/instilled/hop-chromium && cd hop-chromium
-   ./install.sh
+   git clone https://github.com/instilled/hop-chromium && cd hop-chromium && ./install.sh
    ```
-   For every Vivaldi profile, `install.sh` turns on CSS modifications, points *Custom UI Modifications* at the UI
-   mod, sets the saved panel width to match it and makes Hop the panel that opens. It backs up each settings file it
-   changes (`*.hop-backup` next to it), then opens `vivaldi://extensions` with the extension's folder on the
-   clipboard. Run it again after moving the repo or changing the panel width.
-2. Load the extension, in each profile: `vivaldi://extensions` → turn on *Developer mode* → *Load unpacked* →
-   choose `code/hop-chromium-extension` (⌘⇧G, ⌘V pastes the path). Vivaldi can't load an extension from a
-   script, so this step stays manual. The manifest pins the extension's ID, so it doesn't change when the folder moves.
-3. Open or close Hop with Quick Commands (⌘E → *Toggle Current Panel*), or bind that command in Settings → Keyboard.
-   Keep the panel non-floating (⌘E → *Toggle Floating Panel*), or it closes whenever you click the page.
-4. Shortcuts: `vivaldi://extensions/shortcuts`. ⌃S (toggle) and ⌘1–⌘3 come preset; assign ⌘4–⌘6 yourself. If
-   Vivaldi keeps ⌘1–⌘6 for its own *Switch to Tab N*, clear those in Settings → Keyboard.
-5. For the calendar preview, paste the calendar's secret iCal address into the extension's Options (Google Calendar
-   → Settings → your calendar → *Secret address in iCal format*).
+   For every profile this enables CSS mods, points *Custom UI Modifications* at the CSS mod and sets the panel
+   width. Changed settings files are backed up as `*.hop-backup`.
+2. In each profile: `vivaldi://extensions` → *Developer mode* → *Load unpacked* → `code/hop-chromium-extension`
+   (the path is on the clipboard). This can't be scripted: Vivaldi drops extensions loaded any other way (command
+   line, DevTools protocol) on its next start. Then quit Vivaldi and run `./install.sh` again: Vivaldi saves the new
+   panel at 295 px, and the page stays laid out that wide (cut off on the right) until the script resets it.
+3. Toggle the panel with ⌘E → *Toggle Current Panel*, or bind it in Settings → Keyboard. Keep it non-floating.
+4. Shortcuts at `vivaldi://extensions/shortcuts`: ⌃S and ⌘1–⌘3 are preset, assign ⌘4–⌘6 yourself. Clear Vivaldi's
+   own *Switch to Tab 1–6* in Settings → Keyboard if they clash.
+5. For the Calendar preview: in Google Calendar → Settings → your calendar → *Integrate calendar*, copy the *Secret
+   address in iCal format* and paste it into the extension's Options (`vivaldi://extensions` → Hop Sidebar → *Details* → *Extension options*). Do this in
+   each profile; Gmail and Chat previews need no setup.
 
-After `git pull`, click the reload icon on the extension's card.
+After `git pull`, reload the extension on its card.
 
 ### The Vivaldi UI mod
 
-Vivaldi's own interface is a web page, and Vivaldi can load extra CSS into it. `code/hop-chromium-extension/vivaldi/hide-panel-bar.css` uses that
-to make the Hop panel look like Arc's sidebar:
+`hide-panel-bar.css` hides the panel bar, fixes the panel at 220 px (Vivaldi's own minimum is 260), and removes the
+web panel's title row, border and shadow. To set it up by hand: enable *Allow for using CSS modifications* in
+`vivaldi://experiments`, choose `code/hop-chromium-extension/vivaldi` in Settings → Appearance → *Custom UI Modifications*, restart.
 
-- hides the panel bar (the strip of panel icons) and lets the open panel take its place, with Vivaldi's usual 6 px gap
-  to the window edge;
-- fixes the panel at 220 px. Vivaldi won't let a panel be dragged below 260 px, so dragging has no effect while
-  this is set;
-- drops the web panel's title row (name, back/forward/reload, close), for every web panel;
-- removes the panel's border and shadow.
-
-`install.sh` sets this up. By hand, once per profile:
-
-1. **Turn on CSS mods.** Open `vivaldi://experiments`, tick *Allow for using CSS modifications*, and restart Vivaldi.
-   This switch applies to all profiles.
-2. **Point Vivaldi at the folder.** Settings → Appearance → *Custom UI Modifications* → *Select Folder* → choose the
-   `code/hop-chromium-extension/vivaldi` folder (the folder, not the `.css` file). Vivaldi loads every `.css` file in it.
-3. **Restart Vivaldi.** The panel bar disappears and the Hop panel sits at the left edge. If it's empty, you have no
-   panel open: open Hop with ⌘E → *Toggle Current Panel*.
-
-**Changing the width:** edit `--hop-panel-width` in `hide-panel-bar.css`, quit Vivaldi and run `./install.sh` again.
-It copies the width into Vivaldi's saved panel width (`vivaldi.panels.window_defaults.width` in each profile's
-`Preferences`); without that, the page renders at the old width until you click into it.
-
-**Undo:** clear the folder in Settings → Appearance → *Custom UI Modifications* and restart. The panel bar comes back
-and panels can be dragged to any width again.
-
-CSS mods are unofficial: a Vivaldi update can rename the elements the CSS targets. If the layout breaks after an
-update, undo the mod as above until the CSS is fixed.
-
-Hide Vivaldi's own tab bar as well if the sidebar's tab list is enough (Settings → Tabs → *Tab Bar Position*, or
-⌘E → *Toggle Tab Bar*).
+To change the width, edit `--hop-panel-width` and run `./install.sh` again (with Vivaldi quit). To undo, clear the
+folder setting and restart. CSS mods are unofficial, so a Vivaldi update may break them.
 
 ## Limitations
 
 - `javascript:` bookmarklets don't run from the sidebar.
-- The Chat preview needs the Chat tab open (and not asleep).
-- Profiles can't share a window. For several "Spaces" in one window, use Vivaldi's Workspaces.
+- Profiles can't share a window; for several spaces in one window, use Vivaldi's Workspaces.
 
-## Hop for macOS (optional)
+## Hop for macOS
 
-Secondary and no longer developed: I don't use it anymore, but it still builds and works with Chrome and Vivaldi (in Vivaldi without profile switching).
+No longer developed; I don't use it anymore. It still builds (`./build.sh --install`) and works with Chrome and
+Vivaldi. See [its README](code/hop-macos/README.md).
 
-`code/hop-macos` is Hop, a small menu bar app that the sidebar doesn't need. It's built separately with `./build.sh`;
-see [its README](code/hop-macos/README.md). It gives the browser Arc's keyboard flow: ⌥⌘←/→ to switch profiles like
-Spaces, links from other apps in a throwaway mini window like Little Arc, and ⌘O to keep that page as a normal tab.
-
-Link launchers such as Choosy, Finicky or Velja also sit between other apps and the browser, but they only decide
-*where* a link goes, by rules (this domain → that browser or profile), and hand it off. Hop instead follows what
-you're doing: it reads the browser's windows through Accessibility to open links in the profile you used last. It
-opens them in a mini (`--app`) window rather than a tab, and moves that window into a real tab on ⌘O. It also switches
-between the profiles' windows. It doesn't route by rules and drives one browser (Chrome; in Vivaldi without profile
-switching).
+A menu bar app for Arc's keyboard flow: ⌥⌘←/→ switches profiles (Chrome only), links from other apps open in a
+mini window like Little Arc, and ⌘O keeps that page as a tab. Unlike link launchers such as Choosy, Finicky or Velja,
+which route links by rules, Hop follows what you're doing: it opens links in the profile you used last.
 
 ## License
 

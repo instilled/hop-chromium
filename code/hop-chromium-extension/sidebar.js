@@ -494,8 +494,8 @@ function bookmarkNode(node, ctx) {
 }
 
 // Arc-style folder outlines, closed and open (CSS shows the one matching the folder's state).
-const FOLDER_ICONS = `<svg class="closed" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1.75 4.5c0-.83.67-1.5 1.5-1.5h2.7c.4 0 .78.16 1.06.44l.93.93h4.81c.83 0 1.5.67 1.5 1.5v5.88c0 .83-.67 1.5-1.5 1.5H3.25c-.83 0-1.5-.67-1.5-1.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`
-  + `<svg class="opened" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1.75 11.6V4.5c0-.83.67-1.5 1.5-1.5h2.7c.4 0 .78.16 1.06.44l.93.93h4.06c.83 0 1.5.67 1.5 1.5v.75" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M3.1 13h9.15c.55 0 1.04-.34 1.23-.86l1.33-3.6a.8.8 0 0 0-.75-1.08H5.02c-.55 0-1.04.34-1.23.86L1.75 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`;
+const FOLDER_ICONS = `<svg class="closed" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path class="body" d="M1.75 4.5c0-.83.67-1.5 1.5-1.5h2.7c.4 0 .78.16 1.06.44l.93.93h4.81c.83 0 1.5.67 1.5 1.5v5.88c0 .83-.67 1.5-1.5 1.5H3.25c-.83 0-1.5-.67-1.5-1.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`
+  + `<svg class="opened" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1.75 11.6V4.5c0-.83.67-1.5 1.5-1.5h2.7c.4 0 .78.16 1.06.44l.93.93h4.06c.83 0 1.5.67 1.5 1.5v.75" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path class="body" d="M3.1 13h9.15c.55 0 1.04-.34 1.23-.86l1.33-3.6a.8.8 0 0 0-.75-1.08H5.02c-.55 0-1.04.34-1.23.86L1.75 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`;
 
 function collectIds(node, ids = new Set()) {
   ids.add(node.id);

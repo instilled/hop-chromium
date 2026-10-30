@@ -9,6 +9,7 @@
   --hover: rgba(0, 0, 0, 0.06);
   --active: #fff;
   --active-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --folder: #2f7cf6; /* Arc's folder blue */
   color-scheme: light dark;
 }
 
@@ -24,6 +25,7 @@
     --hover: rgba(255, 255, 255, 0.07);
     --active: rgba(255, 255, 255, 0.14);
     --active-shadow: none;
+    --folder: #5ea2ff;
   }
 }
 
@@ -109,7 +111,9 @@ img.icon { object-fit: contain; }
 /* Bookmark folders. */
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
+.folder-icon { color: var(--folder); }
 .folder-icon svg { display: block; }
+.folder-icon .body { fill: color-mix(in srgb, currentColor 30%, transparent); }
 details > summary .folder-icon .opened,
 details[open] > summary .folder-icon .closed { display: none; }
 details[open] > summary .folder-icon .opened { display: block; }
