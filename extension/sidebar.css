@@ -33,8 +33,12 @@ html { background: transparent; }
 
 body {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   margin: 0;
   padding: 12px 3px 16px;
+  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
   font: 14px/1.25 system-ui, -apple-system, sans-serif;
@@ -164,6 +168,14 @@ details > ul { padding-left: 14px; }
 .pinned button:hover { filter: brightness(1.08); }
 .pinned button.active { background: var(--active); box-shadow: var(--active-shadow); }
 .pinned button:not(.open) img { opacity: 0.7; }
+
+/* Pinned and bookmarks stay put; only the tab list scrolls. Bookmarks scroll too only if they alone would leave
+   the tabs less than a few rows. */
+.pinned { flex: none; }
+.bookmarks-section { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+.tabs-section { flex: 1 1 0; min-height: 160px; display: flex; flex-direction: column; }
+.tabs-section > .divider, .tabs-section > .new-tab { flex: none; }
+#tabs { flex: 1; min-height: 0; overflow-y: auto; }
 
 /* Divider above the tab list, with Arc's "Clear" at its end. */
 .divider {
