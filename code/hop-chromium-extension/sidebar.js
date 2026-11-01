@@ -1,6 +1,7 @@
 // Hop Sidebar: pinned bookmarks, bookmarks and this window's tabs. Everything re-renders from Chrome's state on each change.
 
-import { adoptRestoredTabs, bind, boundTabs, openBookmark, pinnedFolder } from "./bookmark-tabs.js";
+import { adoptRestoredTabs, bind, boundTabs, openBookmark, PINNED_FOLDER, pinnedFolder } from "./bookmark-tabs.js";
+import { CALENDAR_HELP, saveCalendarAddress } from "./calendar-setting.js";
 import { pendingAsk, switchTo, ASK } from "./duplicates.js";
 import { calendarPreview, chatPreview, gmailPreview, openChatConversation, previewKind } from "./previews.js";
 
@@ -264,19 +265,21 @@ function draggable(node, bookmark) {
 }
 
 /** Drop on a tile: take its place. Drop on the grid's empty space: go last. */
-function pinnedDropZone(grid, folder) {
+/** `folder` is undefined until something is pinned; the first drop creates it at the top of the bookmarks bar. */
+function pinnedDropZone(grid, folder, barId) {
   const tileAt = (event) => event.target.closest?.("#pinned > button");
   grid.ondragover = (event) => {
     if (!accepts(event)) return;
     event.preventDefault();
     clearDropMarks();
-    tileAt(event)?.classList.add("drop");
+    (tileAt(event) ?? grid.querySelector(".pinned-empty"))?.classList.add("drop");
   };
   grid.ondragleave = (event) => !grid.contains(event.relatedTarget) && clearDropMarks();
   grid.ondrop = async (event) => {
     event.preventDefault();
     clearDropMarks();
     const payload = dropPayload(event);
+    folder ??= { ...(await chrome.bookmarks.create({ parentId: barId, title: PINNED_FOLDER, index: 0 })), children: [] };
     const target = folder.children.find((c) => c.id === tileAt(event)?.dataset.id);
     if (!payload || (payload.bookmark && target?.id === payload.bookmark.id)) return;
     let index = target ? target.index : folder.children.length;
@@ -303,6 +306,7 @@ function hidePeekSoon() {
   clearTimeout(peekTimer);
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
+    if (peek().contains(document.activeElement)) return;
     peek().hidden = true;
     peeking = undefined;
   }, 250);
@@ -333,6 +337,27 @@ function peekMessage(text, setup) {
     message.append(" ", link);
   }
   return message;
+}
+
+/** The Calendar tile before its address is set: paste it right here. */
+function calendarSetup(bookmark) {
+  const input = el("input", { className: "peek-input", type: "text", spellcheck: false, placeholder: "https://calendar.google.com/calendar/ical/…" });
+  const status = el("div", { className: "peek-sub" });
+  const save = el("button", { className: "peek-button", textContent: "Show my meetings" });
+  save.addEventListener("click", async () => {
+    const error = await saveCalendarAddress(input.value);
+    if (error) return (status.textContent = error);
+    peekData.delete(bookmark.id);
+    status.textContent = "Loading…";
+    await refreshPeek(bookmark, "calendar");
+    if (peeking === bookmark.id) peek().replaceChildren(el("div", { className: "peek-scroll" }, ...peekContent(bookmark, "calendar")));
+  });
+  input.addEventListener("keydown", (event) => event.key === "Enter" && save.click());
+  return [
+    el("div", { className: "peek-head", textContent: "Show your meetings here" }),
+    el("div", { className: "peek-empty" }, "Paste your calendar's secret iCal address. ", el("div", { className: "peek-help", textContent: CALENDAR_HELP })),
+    input, save, status,
+  ];
 }
 
 function gmailCard(bookmark, { total, items }) {
@@ -410,6 +435,7 @@ function refreshPeek(bookmark, kind) {
 function peekContent(bookmark, kind) {
   const entry = peekData.get(bookmark.id);
   if (!entry) return [el("div", { className: "peek-empty", textContent: "Loading…" })];
+  if (entry.error?.needsSetup && kind === "calendar") return calendarSetup(bookmark);
   if (entry.error) return [peekMessage(entry.error.message, entry.error.needsSetup)];
   return cards[kind](bookmark, entry.data);
 }
@@ -448,6 +474,13 @@ function wirePeek(tile, bookmark, kind) {
     peek().hidden = true;
     peeking = undefined;
   });
+}
+
+/** Nothing pinned yet: say how, like Arc's empty favorites. */
+function pinnedEmpty() {
+  const arc = el("button", { className: "peek-link", textContent: "import from Arc" });
+  arc.addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html#arc") }));
+  return el("div", { className: "pinned-empty" }, "Drag sites here to pin them, or ", arc);
 }
 
 function pinnedTile(bookmark, index, tab) {
@@ -593,8 +626,10 @@ async function render() {
   const pinnedBookmarks = (pinned?.children ?? []).filter((c) => c.url);
   lastPinned = pinnedBookmarks;
   prefetchPeeks(pinnedBookmarks);
-  if (pinned) pinnedDropZone(document.getElementById("pinned"), pinned);
-  document.getElementById("pinned").replaceChildren(...pinnedBookmarks.map((b, i) => pinnedTile(b, i, ctx.tabFor(b.id))));
+  pinnedDropZone(document.getElementById("pinned"), pinned, root.children[0].id);
+  document.getElementById("pinned").replaceChildren(...(pinnedBookmarks.length
+    ? pinnedBookmarks.map((b, i) => pinnedTile(b, i, ctx.tabFor(b.id)))
+    : [pinnedEmpty()]));
 
   // The bookmarks bar's items sit at the top level; "Other" and "Mobile" stay folders. Other top-level folders, such as
   // Vivaldi's Trash, have no folderType (Chrome 134+) and are left out.

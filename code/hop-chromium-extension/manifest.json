@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAznu+IFry2hUyGiUXgQ6TNAjEXjKgznmjFCWAG4n6bpLNFGN2ujdjyYjQUT4Zp7l5ble7t9r3JWb8ClRXHB/rybTSGqLQko3YzcGwioZfJ6c6FAkXgfm4UooN3HXTdKztLW3JDEnZZfxPa8YSaaSoRBRoQBa6JDU3C8C1fFlg9AMSg2H1BwLE0BaUFqzbSi90GdQAloQXiPdpaB/6luDPIj9a1N7erTrg74Hcz6YOmLHGuosssO8hTYStvSMoYax9pMYuMCFRu7rGIRXPmV+QxvPAS25Gim+YYvhQjxDAxZrJQ/K/dXQNF9U1WSjEaYgCkTBFKZZUxHWl4MMswoW6ewIDAQAB",
   "name": "Hop Sidebar",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Arc-style sidebar: pinned tiles with Gmail, Calendar and Chat previews, bookmarks as pinned tabs, and this window's tabs.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -18,6 +18,9 @@
     "https://mail.google.com/*",
     "https://calendar.google.com/*",
     "https://chat.google.com/*"
+  ],
+  "optional_permissions": [
+    "downloads"
   ],
   "optional_host_permissions": [
     "https://*/*"

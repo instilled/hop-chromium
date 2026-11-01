@@ -36,6 +36,8 @@ gets close to Arc's single sidebar with nothing else around the page, while stay
 - **Tabs** of the window, with tab groups, below. **Clear** closes loose tabs, like Arc; **+ New Tab** below it.
 - **No duplicate tabs from other apps:** a link from Slack, Mail and so on whose page is already open asks at the top
   of the sidebar: *Switch* (close the new tab), *Keep both* or *Always switch*. Set it to ask, switch or off in Options.
+- **Setup page** on install: how to open the sidebar, pin sites and set shortcuts, the calendar address, the Vivaldi
+  UI mod, and **import from Arc**: favorites become pinned sites, each space's pinned tabs a bookmark folder.
 - **Options:** background colour (default `#35343E`), the calendar address, and how to handle duplicate tabs.
 
 ## Install

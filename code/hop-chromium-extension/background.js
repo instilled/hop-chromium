@@ -40,6 +40,11 @@ async function ungroupLeftovers() {
 }
 chrome.runtime.onInstalled.addListener(ungroupLeftovers);
 
+// First install: the setup guide (open the sidebar, pin sites, import from Arc, shortcuts, calendar).
+chrome.runtime.onInstalled.addListener(({ reason }) => {
+  if (reason === "install") chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+});
+
 // MARK: Bookmark tabs
 
 chrome.tabs.onRemoved.addListener(async (tabId, { isWindowClosing }) => {

@@ -161,6 +161,16 @@ details > ul { padding-left: 14px; }
   margin-bottom: 12px;
 }
 .pinned:empty { display: none; }
+.pinned-empty {
+  grid-column: 1 / -1;
+  padding: 12px 10px;
+  border: 1.5px dashed var(--muted);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.pinned-empty.drop { border-color: var(--folder); color: var(--fg); }
 .pinned button {
   height: 50px;
   border: 0;
@@ -313,6 +323,31 @@ details > ul { padding-left: 14px; }
 .peek-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .peek-sub { color: var(--muted); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .peek-empty { padding: 8px; color: var(--muted); }
+.peek-input {
+  width: calc(100% - 16px);
+  margin: 4px 8px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--fg);
+  font: inherit;
+  font-size: 12px;
+  user-select: text;
+}
+.peek-button {
+  margin: 4px 8px 6px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--folder);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+.peek .peek-sub:empty { display: none; }
+.peek-help { margin-top: 4px; font-size: 12px; }
 .peek-link { border: 0; background: none; color: var(--fg); text-decoration: underline; font: inherit; padding: 0; }
 .peek-item:not(.unread) .peek-strong { font-weight: 500; }
 .peek-item.unread .peek-strong::after { content: " •"; color: #e5484d; }

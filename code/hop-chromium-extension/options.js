@@ -1,5 +1,7 @@
 // Sidebar settings, stored in chrome.storage.sync so they follow the browser profile.
 
+import { calendarAddress, saveCalendarAddress } from "./calendar-setting.js";
+
 const text = document.getElementById("background");
 const picker = document.getElementById("picker");
 const DEFAULT = "#35343E";
@@ -24,34 +26,16 @@ document.getElementById("reset").addEventListener("click", () => {
   save("");
 });
 
-// MARK: Calendar preview (secret iCal address; kept in local storage, it's a credential)
+// MARK: Calendar preview (see calendar-setting.js)
 
 const calendar = document.getElementById("calendar");
 const calendarStatus = document.getElementById("calendar-status");
 
-chrome.storage.local.get("calendarIcs").then(({ calendarIcs }) => (calendar.value = calendarIcs ?? ""));
-
+calendarAddress().then((address) => (calendar.value = address));
 calendar.addEventListener("change", async () => {
-  const value = calendar.value.trim();
   calendarStatus.textContent = "";
-  if (!value) return chrome.storage.local.remove("calendarIcs");
-  let url;
-  try {
-    url = new URL(value);
-  } catch {
-    calendarStatus.textContent = "That isn't a web address.";
-    return;
-  }
-  // Google is covered by the manifest; other calendar hosts need the user's OK.
-  if (url.hostname !== "calendar.google.com") {
-    const granted = await chrome.permissions.request({ origins: [`${url.origin}/*`] });
-    if (!granted) {
-      calendarStatus.textContent = "Hop needs access to that site to read the calendar.";
-      return;
-    }
-  }
-  await chrome.storage.local.set({ calendarIcs: url.href });
-  calendarStatus.textContent = "Saved.";
+  const error = await saveCalendarAddress(calendar.value);
+  calendarStatus.textContent = error ?? (calendar.value.trim() ? "Saved." : "");
 });
 
 // MARK: Duplicate tabs from other apps (see duplicates.js)

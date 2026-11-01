@@ -1,0 +1,99 @@
+:root {
+  --bg: #f5f5f7;
+  --card: #fff;
+  --fg: #1d1d1f;
+  --muted: #6e6e73;
+  --line: rgba(0, 0, 0, 0.1);
+  --accent: #2f7cf6;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #2a2933;
+    --card: #35343e;
+    --fg: #ececee;
+    --muted: #9e9ca8;
+    --line: rgba(255, 255, 255, 0.1);
+    --accent: #5ea2ff;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 system-ui, -apple-system, sans-serif;
+}
+
+main { max-width: 680px; margin: 0 auto; padding: 48px 24px 64px; }
+
+header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+header img { border-radius: 12px; }
+h1 { margin: 0; font-size: 28px; letter-spacing: -0.3px; }
+header p { margin: 2px 0 0; }
+
+section {
+  margin-bottom: 16px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--line);
+}
+h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 18px; }
+.step {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+}
+p { margin: 8px 0; }
+ol { margin: 8px 0; padding-left: 20px; }
+li { margin: 6px 0; }
+
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+code { font-size: 13px; padding: 1px 5px; border-radius: 4px; background: var(--line); word-break: break-all; }
+kbd { font: inherit; font-size: 13px; padding: 1px 6px; border-radius: 4px; box-shadow: inset 0 -1px 0 var(--line), 0 0 0 1px var(--line); }
+a { color: var(--accent); }
+
+.button {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--line);
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.button.primary { background: var(--accent); color: #fff; }
+.link { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
+
+.field { display: flex; gap: 8px; align-items: center; }
+input[type=text] {
+  flex: 1;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+
+#arc-list { margin: 8px 0 12px; }
+#arc-list label { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; }
+#arc-list h3 { margin: 12px 0 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+
+/* Browser-specific steps; welcome.js sets the class on <html>. */
+html:not(.vivaldi) .only-vivaldi,
+html.vivaldi .only-chrome { display: none; }
+
+footer { margin-top: 24px; text-align: center; }

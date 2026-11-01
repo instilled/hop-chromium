@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Welcome to Hop Sidebar</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon128.png" alt="" width="56" height="56">
+      <div>
+        <h1>Welcome to Hop Sidebar</h1>
+        <p class="muted">Arc's sidebar, in <span class="browser-name">your browser</span>. A few steps and you're set.</p>
+      </div>
+    </header>
+
+    <section>
+      <h2><span class="step">1</span> Open the sidebar</h2>
+      <div class="only-vivaldi">
+        <p>Hop Sidebar is in Vivaldi's panel bar on the left: click its icon (a ring with a dot). To open and close it from
+          the keyboard, use ⌘E → <em>Toggle Current Panel</em>, or bind that command in Settings → Keyboard.</p>
+        <p class="muted">Keep the panel non-floating (⌘E → <em>Toggle Floating Panel</em>), or it closes whenever you click
+          the page.</p>
+      </div>
+      <div class="only-chrome">
+        <p>Click Hop Sidebar's toolbar icon, or press <kbd>⌃S</kbd>. Pin the icon from the puzzle-piece menu so it stays
+          in the toolbar.</p>
+        <p>For an Arc-like layout, put the panel on the left: Settings → Appearance → <em>Side panel</em> →
+          <em>Show on left</em>.</p>
+      </div>
+    </section>
+
+    <section id="pin">
+      <h2><span class="step">2</span> Pin your sites</h2>
+      <p>Drag a tab from the sidebar's tab list, or a link from any page, onto the top of the sidebar. Pinned sites show as
+        tiles, like Arc's favorites, and ⌘1–⌘6 open the first six. Hover the Gmail, Google Calendar or Google Chat tile for
+        a preview.</p>
+      <p class="muted">Pinned sites live in a bookmarks folder named <em>Pinned</em>; the rest of your bookmarks bar shows
+        below them. Each bookmark keeps its own tab, like Arc's pinned tabs.</p>
+    </section>
+
+    <section id="arc">
+      <h2><span class="step">3</span> Coming from Arc? Bring your sidebar</h2>
+      <p>Arc keeps its sidebar in a file. Choose it here and Hop turns your favorites into pinned sites, and each space's
+        pinned tabs into a bookmark folder (with Arc's folders inside).</p>
+      <ol class="muted">
+        <li>Click <em>Choose Arc's sidebar file</em>, then press <kbd>⌘⇧G</kbd> in the file dialog.</li>
+        <li>Paste the path <button id="copy-arc-path" class="link">(copy it)</button> and press Return:
+          <code>~/Library/Application Support/Arc/StorableSidebar.json</code></li>
+      </ol>
+      <p>
+        <label class="button"><input type="file" id="arc-file" accept=".json,application/json" hidden>Choose Arc's sidebar file</label>
+        <span id="arc-status" class="muted"></span>
+      </p>
+      <form id="arc-choices" hidden>
+        <div id="arc-list"></div>
+        <button type="submit" class="button primary">Import</button>
+      </form>
+      <p class="muted small">The file is read here in your browser and goes nowhere else.</p>
+    </section>
+
+    <section>
+      <h2><span class="step">4</span> Shortcuts</h2>
+      <p>⌃S shows and hides the sidebar, and ⌘1–⌘3 open the first pinned sites. Browsers only allow four preset shortcuts,
+        so set ⌘4–⌘6 yourself.</p>
+      <p><button id="shortcuts" class="button">Open shortcut settings</button></p>
+      <p class="only-vivaldi muted">If ⌘1–⌘6 still switch tabs, Vivaldi's own <em>Switch to Tab 1–6</em> shortcuts win:
+        clear them in Settings → Keyboard.</p>
+    </section>
+
+    <section>
+      <h2><span class="step">5</span> Calendar preview <span class="muted">(optional)</span></h2>
+      <p>To see today's and tomorrow's meetings when you hover the Calendar tile, paste your calendar's secret iCal
+        address. <span class="muted" id="calendar-help"></span></p>
+      <p class="field">
+        <input type="text" id="calendar" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics">
+        <span id="calendar-status" class="muted"></span>
+      </p>
+      <p class="muted small">Stored only in this browser profile. Gmail and Chat previews need no setup.</p>
+    </section>
+
+    <section class="only-vivaldi" id="vivaldi-mod">
+      <h2><span class="step">6</span> Slim it down <span class="muted">(optional)</span></h2>
+      <p>A small Vivaldi UI mod hides the panel bar, lets Hop take its place at 220 px, and removes the panel's title row
+        and border, for a single sidebar like Arc's.</p>
+      <ol>
+        <li><button id="save-mod" class="button">Save the mod</button> <span id="mod-status" class="muted"></span><br>
+          <span class="muted small">It goes to a folder <code>Hop Sidebar Vivaldi mod</code> in your Downloads.</span></li>
+        <li>Open <code>vivaldi://experiments</code> <button class="link copy" data-copy="vivaldi://experiments">(copy)</button>,
+          tick <em>Allow for using CSS modifications</em>, and restart Vivaldi.</li>
+        <li>Settings → Appearance → <em>Custom UI Modifications</em> → <em>Select Folder</em> → choose
+          <code>Downloads/Hop Sidebar Vivaldi mod</code>. Restart Vivaldi again.</li>
+      </ol>
+      <p class="muted">If the sidebar looks cut off on the right afterwards, click into it once: Vivaldi keeps the panel's
+        old width until then. To undo, clear the folder in <em>Custom UI Modifications</em>.</p>
+    </section>
+
+    <footer class="muted small">
+      Find this page again under Hop Sidebar's options. Source, help and issues:
+      <a href="https://github.com/instilled/hop-chromium" target="_blank">github.com/instilled/hop-chromium</a>
+    </footer>
+  </main>
+  <script type="module" src="welcome.js"></script>
+</body>
+</html>

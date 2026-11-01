@@ -24,9 +24,10 @@ pinned tabs, and this window's tabs.
 > • No duplicate tabs: when a link from another app opens a page that's already open, switch to it, keep both, or
 >   always switch.
 > • Unread counts on bookmarks from tab titles (Gmail, WhatsApp, Slack, Outlook and more).
+> • Coming from Arc? Import your favorites and each space's pinned tabs from Arc's sidebar file in one step.
 >
-> In Vivaldi, Hop Sidebar becomes a panel, and an optional CSS mod (see the GitHub page) hides the panel bar and slims
-> the panel to 220 px, for a single sidebar like Arc's.
+> In Vivaldi, Hop Sidebar becomes a panel, and an optional UI mod (saved from the setup page) hides the panel bar and
+> slims the panel to 220 px, for a single sidebar like Arc's.
 >
 > Nothing leaves your browser: no servers, no analytics. Open source (MIT): github.com/instilled/hop-chromium
 
@@ -61,6 +62,7 @@ previews of Gmail, Google Calendar and Google Chat on hover.
 | Host `mail.google.com` | Fetches Gmail's unread feed for the Gmail preview. Also where Chat runs inside Gmail. |
 | Host `calendar.google.com` | Fetches the calendar's secret iCal address for the Calendar preview. |
 | Host `chat.google.com` | Reads the open Chat tab for the Chat preview. |
+| Optional `downloads` | Only requested when the user clicks *Save the mod* on the setup page in Vivaldi: saves the optional Vivaldi UI mod (a CSS file in the package) into its own folder in Downloads. |
 | Optional host `https://*/*` | Only requested, for that one site, if the user enters a calendar address that isn't on Google. |
 
 **Remote code:** No. All code is in the package.

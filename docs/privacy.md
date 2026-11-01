@@ -11,6 +11,8 @@ tracking. Everything it reads stays in your browser.
 - **Google Calendar:** to show the calendar preview, it fetches the secret iCal address you enter in Options, directly
   from that address. If the address isn't on `calendar.google.com`, the browser asks you for access to that one site
   first.
+- **Arc import:** if you choose Arc's sidebar file on the setup page, it is read in your browser to create bookmarks,
+  and not kept.
 - **Google Chat:** to show the Chat preview, it reads the conversation list from the Chat tab you have open, in your
   browser.
 
