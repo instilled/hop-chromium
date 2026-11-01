@@ -10,6 +10,24 @@ code/hop-chromium-extension/vivaldi/  the Vivaldi UI mod (CSS)
 code/hop-macos/, build.sh             Hop for macOS, an older companion app (see the end)
 ```
 
+<p>
+  <img src="docs/screenshots/sidebar.png" width="220" alt="The sidebar: pinned tiles, bookmark folders, the window's tabs">
+  <img src="docs/screenshots/preview-gmail.png" width="220" alt="Hovering the Gmail tile shows unread emails">
+  <img src="docs/screenshots/preview-calendar.png" width="220" alt="Hovering the Calendar tile shows today's and tomorrow's meetings">
+</p>
+<p>
+  <img src="docs/screenshots/menu.png" width="220" alt="Right-click menu on a bookmark folder">
+  <img src="docs/screenshots/duplicate.png" width="220" alt="A link from another app whose page is already open">
+</p>
+
+### Why Vivaldi
+
+It's a plain Chromium extension, so it works in Chrome too: load it the same way at `chrome://extensions` and it
+opens in Chrome's side panel (Settings → Appearance → *Side panel* → *Show on left*). But Chrome keeps its tab strip,
+won't make the side panel narrower than 360 px, and gives the extension no way to change that. Vivaldi shows the
+extension as a panel, and its CSS UI mods can hide the panel bar and the tab bar and slim the panel to 220 px. That
+gets close to Arc's single sidebar with nothing else around the page, while staying on a maintained Chromium browser.
+
 ## What it does
 
 - **Pinned:** bookmarks in a folder named **Pinned** show as a grid of icons at the top. ⌘1–⌘6 select the first six.
