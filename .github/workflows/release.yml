@@ -1,0 +1,38 @@
+# Pushing a tag like v0.4.0 builds the Chrome Web Store zip and publishes a GitHub release with it attached.
+# The tag must match the version in code/hop-chromium-extension/manifest.json.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches the manifest version
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("code/hop-chromium-extension/manifest.json"))["version"])')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match manifest version $version"
+            exit 1
+          fi
+
+      - name: Build the zip
+        run: docs/store/package.sh
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip=$(ls dist/hop-sidebar-*.zip)
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$zip" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$zip" --title "Hop Sidebar ${GITHUB_REF_NAME#v}" --generate-notes
+          fi
