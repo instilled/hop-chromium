@@ -20,7 +20,9 @@ code/hop-macos/, build.sh             Hop for macOS, an older companion app (see
   recent Google Chat conversations (Chat tab must be open). Cached, so they show instantly.
 - **Edit:** right-click for *Rename · New Folder · Delete*; drag to rearrange; drop a tab or link to bookmark it.
 - **Tabs** of the window, with tab groups, below. **Clear** closes loose tabs, like Arc; **+ New Tab** below it.
-- **Options:** background colour (default `#35343E`) and the calendar address.
+- **No duplicate tabs from other apps:** a link from Slack, Mail and so on whose page is already open asks at the top
+  of the sidebar: *Switch* (close the new tab), *Keep both* or *Always switch*. Set it to ask, switch or off in Options.
+- **Options:** background colour (default `#35343E`), the calendar address, and how to handle duplicate tabs.
 
 ## Install
 

@@ -181,6 +181,29 @@ details > ul { padding-left: 14px; }
 .tabs-section > .divider, .tabs-section > .new-tab { flex: none; }
 #tabs { flex: 1; min-height: 0; overflow-y: auto; }
 
+/* "Already open" question for a duplicate tab from another app. */
+.duplicate {
+  flex: none;
+  margin: 0 4px 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--folder) 22%, var(--bg));
+  font-size: 13px;
+}
+.duplicate-text { display: flex; gap: 4px; min-width: 0; color: var(--muted); }
+.duplicate-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--fg); }
+.duplicate-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.duplicate-actions button {
+  border: 0;
+  border-radius: 5px;
+  padding: 3px 8px;
+  background: var(--hover);
+  color: var(--fg);
+  font: inherit;
+  font-size: 12px;
+}
+.duplicate-actions button:first-child { background: var(--folder); color: #fff; }
+
 /* Divider above the tab list, with Arc's "Clear" at its end. */
 .divider {
   display: flex;

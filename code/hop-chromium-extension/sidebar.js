@@ -1,6 +1,7 @@
 // Hop Sidebar: pinned bookmarks, bookmarks and this window's tabs. Everything re-renders from Chrome's state on each change.
 
 import { adoptRestoredTabs, bind, boundTabs, openBookmark, pinnedFolder } from "./bookmark-tabs.js";
+import { pendingAsk, switchTo, ASK } from "./duplicates.js";
 import { calendarPreview, chatPreview, gmailPreview, openChatConversation, previewKind } from "./previews.js";
 
 const NONE = chrome.tabGroups.TAB_GROUP_ID_NONE;
@@ -555,8 +556,29 @@ function tabItems(tabs, groups) {
 
 // MARK: Render
 
+// A link from another app opened a page that is already open (see duplicates.js): offer to go there instead.
+async function renderDuplicate() {
+  const bar = document.getElementById("duplicate");
+  const ask = await pendingAsk(windowId);
+  bar.hidden = !ask;
+  if (!ask) return bar.replaceChildren();
+  const button = (text, onclick) => el("button", { textContent: text, onclick });
+  bar.replaceChildren(
+    el("div", { className: "duplicate-text", textContent: "Already open: " },
+      el("span", { className: "duplicate-title", textContent: ask.title })),
+    el("div", { className: "duplicate-actions" },
+      button("Switch", () => switchTo(ask.existingId, ask.tabId)),
+      button("Keep both", () => chrome.storage.session.remove(ASK)),
+      button("Always switch", async () => {
+        await chrome.storage.sync.set({ duplicates: "switch" });
+        await switchTo(ask.existingId, ask.tabId);
+      })),
+  );
+}
+
 async function render() {
   if (paused) return;
+  renderDuplicate().catch(console.warn);
   const [tabs, groups, [root], pinned, bound] = await Promise.all([
     chrome.tabs.query({ windowId }), chrome.tabGroups.query({ windowId }), chrome.bookmarks.getTree(),
     pinnedFolder(), boundTabs(windowId),

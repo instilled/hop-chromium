@@ -30,6 +30,15 @@
   <p>Your calendar's secret iCal address: Google Calendar → Settings → your calendar → <em>Integrate calendar</em> →
      <em>Secret address in iCal format</em>. Hovering the pinned Calendar tile then shows today's and tomorrow's
      meetings. Stored only in this browser profile. <span id="calendar-status"></span></p>
+  <label for="duplicates" style="margin-top: 20px">Links from other apps</label>
+  <div class="field">
+    <select id="duplicates">
+      <option value="ask">Ask in the sidebar when the page is already open</option>
+      <option value="switch">Switch to the open tab and close the new one</option>
+      <option value="off">Always open a new tab</option>
+    </select>
+  </div>
+  <p>Applies to tabs opened by other apps (Slack, Mail, …) when the same page is already open in this profile.</p>
   <script src="options.js"></script>
 </body>
 </html>

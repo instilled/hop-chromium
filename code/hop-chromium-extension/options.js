@@ -53,3 +53,9 @@ calendar.addEventListener("change", async () => {
   await chrome.storage.local.set({ calendarIcs: url.href });
   calendarStatus.textContent = "Saved.";
 });
+
+// MARK: Duplicate tabs from other apps (see duplicates.js)
+
+const duplicates = document.getElementById("duplicates");
+chrome.storage.sync.get("duplicates").then((stored) => (duplicates.value = stored.duplicates ?? "ask"));
+duplicates.addEventListener("change", () => chrome.storage.sync.set({ duplicates: duplicates.value }));
