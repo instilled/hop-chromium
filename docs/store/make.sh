@@ -4,8 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-shot() { # name screenshot title text
-  local url="file://$PWD/frame.html?shot=$2&title=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$3")&text=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$4")"
+shot() { # name screenshot title text [card]
+  local url="file://$PWD/frame.html?shot=$2&title=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$3")&text=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$4")&card=${5:-}"
   "$CHROME" --headless=new --disable-gpu --allow-file-access-from-files --hide-scrollbars --force-device-scale-factor=1 \
     --window-size=1280,800 --screenshot="$PWD/$1.png" "$url" >/dev/null 2>&1
   echo "$1.png"
@@ -17,8 +17,12 @@ shot 2-gmail preview-gmail "Peek at your inbox" \
   "Hover the Gmail tile for the newest unread emails, without switching tabs."
 shot 3-calendar preview-calendar "Your day at a glance" \
   "Hover the Calendar tile for today's remaining meetings and tomorrow's."
-shot 4-bookmarks menu "Bookmarks that act like pinned tabs" \
-  "Each bookmark keeps its own tab. Right-click to rename or add folders, drag to rearrange, drop a link to save it."
+# The setup page's Arc import card (arc-card.html), rendered first.
+"$CHROME" --headless=new --disable-gpu --allow-file-access-from-files --hide-scrollbars --force-dark-mode \
+  --blink-settings=preferredColorScheme=0 --default-background-color=00000000 --force-device-scale-factor=2 \
+  --window-size=640,465 --screenshot="$PWD/arc-card.png" "file://$PWD/arc-card.html" >/dev/null 2>&1
+shot 4-arc sidebar "Coming from Arc?" \
+  "Bring your favorites and spaces over in one step." arc-card.png
 shot 5-duplicates duplicate "No duplicate tabs" \
   "A link from Slack or Mail whose page is already open? Switch to it, keep both, or always switch."
 

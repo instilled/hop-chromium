@@ -11,7 +11,7 @@ window's tabs, in a slim panel that replaces Vivaldi's panel bar. A plain extens
     <td><img src="docs/store/3-calendar.png" alt="Hovering the Calendar tile shows today's and tomorrow's meetings"></td>
   </tr>
   <tr>
-    <td><img src="docs/store/4-bookmarks.png" alt="Right-click menu on a bookmark folder"></td>
+    <td><img src="docs/store/4-arc.png" alt="Importing favorites and spaces from Arc on the setup page"></td>
     <td><img src="docs/store/5-duplicates.png" alt="A link from another app whose page is already open"></td>
   </tr>
 </table>

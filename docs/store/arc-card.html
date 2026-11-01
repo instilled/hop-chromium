@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- The setup page's Arc import card with demo choices, for the store screenshot. Rendered by make.sh. -->
+<html class="vivaldi"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../code/hop-chromium-extension/welcome.css">
+<style>html, body { background: transparent; } main { padding: 0; max-width: none; } section { margin: 0; }</style>
+</head><body><main>
+<section id="arc">
+      <h2><span class="step">3</span> Coming from Arc? Bring your sidebar</h2>
+      <p>Arc keeps its sidebar in a file. Choose it here and Hop turns your favorites into pinned sites, and each space's
+        pinned tabs into a bookmark folder (with Arc's folders inside).</p>
+      <ol class="muted">
+        <li>Click <em>Choose Arc's sidebar file</em>, then press <kbd>⌘⇧G</kbd> in the file dialog.</li>
+        <li>Paste the path <button id="copy-arc-path" class="link">(copy it)</button> and press Return:
+          <code>~/Library/Application Support/Arc/StorableSidebar.json</code></li>
+      </ol>
+      <p>
+        <label class="button"><input type="file" id="arc-file" accept=".json,application/json" hidden>Choose Arc's sidebar file</label>
+        <span id="arc-status" class="muted"></span>
+      </p>
+      <form id="arc-choices">
+        <div id="arc-list">
+          <h3>Favorites → pinned sites</h3>
+          <label><input type="checkbox" checked> Favorites (Default profile) <span class="muted">6 sites</span></label>
+          <h3>Spaces → a bookmark folder each</h3>
+          <label><input type="checkbox" checked> Work <span class="muted">24 sites</span></label>
+          <label><input type="checkbox" checked> Personal <span class="muted">5 sites</span></label>
+        </div>
+        <button type="submit" class="button primary">Import</button>
+      </form>
+      <p class="muted small">The file is read here in your browser and goes nowhere else.</p>
+    </section>
+</main></body></html>

@@ -20,6 +20,13 @@
   .copy { position: absolute; top: 200px; left: 72px; width: 600px; }
   h1 { margin: 0 0 20px; font-size: 52px; line-height: 1.1; font-weight: 700; letter-spacing: -0.5px; }
   p { margin: 0; font-size: 24px; line-height: 1.45; color: #b4b2c0; }
+  /* With a card (a page of the extension's own UI): headline up top, the card below it. */
+  .card { display: none; }
+  body.with-card .copy { top: 56px; }
+  body.with-card h1 { font-size: 44px; margin-bottom: 14px; }
+  body.with-card .brand { margin-bottom: 18px; }
+  body.with-card .card { display: block; position: absolute; top: 206px; left: 72px; width: 600px; height: auto;
+    object-fit: initial; border-radius: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); }
   .brand { margin-bottom: 28px; font-size: 18px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #5ea2ff; }
 </style>
 <img id="shot">
@@ -29,10 +36,15 @@
     <h1 id="title"></h1>
     <p id="text"></p>
   </div>
+  <img class="card" id="card" alt="">
 </div>
 <script>
   const q = new URLSearchParams(location.search);
   document.getElementById("shot").src = `../screenshots/${q.get("shot")}.png`;
   document.getElementById("title").textContent = q.get("title");
   document.getElementById("text").textContent = q.get("text");
+  if (q.get("card")) {
+    document.body.classList.add("with-card");
+    document.getElementById("card").src = q.get("card");
+  }
 </script>
