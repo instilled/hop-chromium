@@ -3,22 +3,18 @@
 An Arc-style sidebar for Vivaldi: pinned tiles with previews, bookmarks that act like Arc's pinned tabs, and the
 window's tabs, in a slim panel that replaces Vivaldi's panel bar. A plain extension plus a CSS mod; nothing to build.
 
-```
-install.sh                            sets up Hop Sidebar in Vivaldi
-code/hop-chromium-extension/          the extension
-code/hop-chromium-extension/vivaldi/  the Vivaldi UI mod (CSS)
-code/hop-macos/, build.sh             Hop for macOS, an older companion app (see the end)
-```
+![The sidebar: pinned tiles, bookmark folders and the window's tabs](docs/store/1-sidebar.png)
 
-<p>
-  <img src="docs/screenshots/sidebar.png" width="220" alt="The sidebar: pinned tiles, bookmark folders, the window's tabs">
-  <img src="docs/screenshots/preview-gmail.png" width="220" alt="Hovering the Gmail tile shows unread emails">
-  <img src="docs/screenshots/preview-calendar.png" width="220" alt="Hovering the Calendar tile shows today's and tomorrow's meetings">
-</p>
-<p>
-  <img src="docs/screenshots/menu.png" width="220" alt="Right-click menu on a bookmark folder">
-  <img src="docs/screenshots/duplicate.png" width="220" alt="A link from another app whose page is already open">
-</p>
+<table>
+  <tr>
+    <td><img src="docs/store/2-gmail.png" alt="Hovering the Gmail tile shows unread emails"></td>
+    <td><img src="docs/store/3-calendar.png" alt="Hovering the Calendar tile shows today's and tomorrow's meetings"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/store/4-bookmarks.png" alt="Right-click menu on a bookmark folder"></td>
+    <td><img src="docs/store/5-duplicates.png" alt="A link from another app whose page is already open"></td>
+  </tr>
+</table>
 
 ### Why Vivaldi
 
@@ -43,6 +39,13 @@ gets close to Arc's single sidebar with nothing else around the page, while stay
 - **Options:** background colour (default `#35343E`), the calendar address, and how to handle duplicate tabs.
 
 ## Install
+
+```
+install.sh                            sets up Hop Sidebar in Vivaldi
+code/hop-chromium-extension/          the extension
+code/hop-chromium-extension/vivaldi/  the Vivaldi UI mod (CSS)
+code/hop-macos/, build.sh             Hop for macOS, an older companion app (see the end)
+```
 
 Tested with Vivaldi 8.2 on macOS.
 
