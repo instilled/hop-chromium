@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Chrome Web Store screenshot (1280×800): a sidebar shot with a headline. Rendered by make.sh. -->
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+  body {
+    display: flex; gap: 6px; padding: 48px 56px; box-sizing: border-box;
+    background: radial-gradient(circle at 75% 30%, #4a4660 0%, #2a2833 55%, #1f1d26 100%);
+    font-family: -apple-system, system-ui, sans-serif; color: #ececee;
+  }
+  /* The sidebar, then the page area beside it, like the browser window. */
+  img { width: 250px; height: 704px; object-fit: cover; object-position: top; flex: none; border-radius: 14px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08); }
+  .page {
+    flex: 1; position: relative; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0) 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  /* Fixed position, so the text sits in the same place on every image. */
+  .copy { position: absolute; top: 200px; left: 72px; width: 600px; }
+  h1 { margin: 0 0 20px; font-size: 52px; line-height: 1.1; font-weight: 700; letter-spacing: -0.5px; }
+  p { margin: 0; font-size: 24px; line-height: 1.45; color: #b4b2c0; }
+  .brand { margin-bottom: 28px; font-size: 18px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #5ea2ff; }
+</style>
+<img id="shot">
+<div class="page">
+  <div class="copy">
+    <div class="brand">Hop Sidebar</div>
+    <h1 id="title"></h1>
+    <p id="text"></p>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  document.getElementById("shot").src = `../screenshots/${q.get("shot")}.png`;
+  document.getElementById("title").textContent = q.get("title");
+  document.getElementById("text").textContent = q.get("text");
+</script>
