@@ -72,7 +72,6 @@ used for unrelated purposes, not used for creditworthiness. All of it is process
 
 **Privacy policy URL:** https://github.com/instilled/hop-chromium/blob/main/docs/privacy.md
 
-## After approval
+## Store page
 
-Add the store link to the README's Install section (Vivaldi and Chrome can install from it; the CSS mod still comes
-from `install.sh`).
+https://chromewebstore.google.com/detail/hop-sidebar/hkokhefgbadgimfimolbkhjoeehnfdgn

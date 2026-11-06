@@ -3,6 +3,9 @@
 An Arc-style sidebar for Vivaldi: pinned tiles with previews, bookmarks that act like Arc's pinned tabs, and the
 window's tabs, in a slim panel that replaces Vivaldi's panel bar. A plain extension plus a CSS mod; nothing to build.
 
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/hop-sidebar/hkokhefgbadgimfimolbkhjoeehnfdgn)**
+(Vivaldi and Chrome)
+
 ![The sidebar: pinned tiles, bookmark folders and the window's tabs](docs/store/1-sidebar.png)
 
 <table>
@@ -42,6 +45,13 @@ gets close to Arc's single sidebar with nothing else around the page, while stay
 
 ## Install
 
+**From the store:** install [Hop Sidebar](https://chromewebstore.google.com/detail/hop-sidebar/hkokhefgbadgimfimolbkhjoeehnfdgn);
+a setup page opens that walks through the rest. In Chrome that's all. In Vivaldi, for the slim Arc-style panel, also
+run `./install.sh` (below).
+
+**From this repo** (to run your own changes): the same, with `./install.sh --dev` and the extension loaded unpacked
+instead of from the store. Use one or the other in a profile, not both.
+
 ```
 install.sh                            sets up Hop Sidebar in Vivaldi
 code/hop-chromium-extension/          the extension
@@ -51,15 +61,16 @@ code/hop-macos/, build.sh             Hop for macOS, an older companion app (see
 
 Tested with Vivaldi 8.2 on macOS.
 
-1. Quit Vivaldi, then:
+1. Quit Vivaldi, then (add `--dev` for the unpacked version):
    ```sh
    git clone https://github.com/instilled/hop-chromium && cd hop-chromium && ./install.sh
    ```
    For every profile this enables CSS mods, points *Custom UI Modifications* at the CSS mod and sets the panel
    width. Changed settings files are backed up as `*.hop-backup`.
-2. In each profile: `vivaldi://extensions` → *Developer mode* → *Load unpacked* → `code/hop-chromium-extension`
-   (the path is on the clipboard). This can't be scripted: Vivaldi drops extensions loaded any other way (command
-   line, DevTools protocol) on its next start. Then quit Vivaldi and run `./install.sh` again: Vivaldi saves the new
+2. In each profile, install the extension: the script opens the store page, or with `--dev` `vivaldi://extensions`,
+   where you turn on *Developer mode* → *Load unpacked* → `code/hop-chromium-extension` (the path is on the
+   clipboard). Loading can't be scripted: Vivaldi drops extensions loaded any other way (command
+   line, DevTools protocol) on its next start. Then quit Vivaldi and run `./install.sh` (or `--dev`) again: Vivaldi saves the new
    panel at 295 px, and the page stays laid out that wide (cut off on the right) until the script resets it.
 3. Toggle the panel with ⌘E → *Toggle Current Panel*, or bind it in Settings → Keyboard. Keep it non-floating.
 4. Shortcuts at `vivaldi://extensions/shortcuts`: ⌃S and ⌘1–⌘3 are preset, assign ⌘4–⌘6 yourself. Clear Vivaldi's
@@ -68,7 +79,7 @@ Tested with Vivaldi 8.2 on macOS.
    address in iCal format* and paste it into the extension's Options (`vivaldi://extensions` → Hop Sidebar → *Details* → *Extension options*). Do this in
    each profile; Gmail and Chat previews need no setup.
 
-After `git pull`, reload the extension on its card.
+After `git pull`, reload an unpacked extension on its card; the store version updates itself.
 
 ### The Vivaldi UI mod
 
