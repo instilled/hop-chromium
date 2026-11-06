@@ -4,9 +4,19 @@
 #   - sets Hop's saved panel width to the mod's width (Vivaldi saves its own 295 px when the extension is loaded,
 #     and the page then lays out wider than the panel), and makes Hop the panel that opens.
 # Vivaldi must be quit: it rewrites its settings on exit. Each changed file is backed up next to it (*.hop-backup).
-# Profiles without the extension get it on the next run: load it there (Load unpacked), quit Vivaldi, run this again.
+# Profiles without the extension get it on the next run: install it there, quit Vivaldi, run this again.
 # Also run it again after moving the repo or changing --hop-panel-width.
+#
+#   ./install.sh         for the Chrome Web Store version (updates itself)
+#   ./install.sh --dev   for the extension in this repo, loaded unpacked (to run your own changes)
 set -euo pipefail
+
+MODE=store
+case "${1:-}" in
+  "") ;;
+  --dev) MODE=dev ;;
+  *) echo "Usage: ./install.sh [--dev]" >&2; exit 2 ;;
+esac
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 EXT="$REPO/code/hop-chromium-extension"
@@ -19,9 +29,9 @@ if pgrep -x Vivaldi >/dev/null; then
   exit 1
 fi
 
-python3 -I - "$DATA" "$EXT" "$MOD" <<'EOF'
+python3 -I - "$DATA" "$EXT" "$MOD" "$MODE" <<'EOF'
 import base64, hashlib, json, re, shutil, sys
-data, ext, mod = sys.argv[1:]
+data, ext, mod, mode = sys.argv[1:]
 
 def edit(path, change):
     with open(path) as f: prefs = json.load(f)
@@ -29,10 +39,13 @@ def edit(path, change):
     change(prefs)
     with open(path, "w") as f: json.dump(prefs, f, separators=(",", ":"))
 
-# The extension's ID follows from the manifest key, so it's the same wherever the repo is.
+# Two IDs: the Chrome Web Store's, and the unpacked one, which follows from the manifest key (the same wherever
+# the repo is).
+STORE_ID = "hkokhefgbadgimfimolbkhjoeehnfdgn"
 key = json.load(open(f"{ext}/manifest.json"))["key"]
-ext_id = "".join(chr(ord("a") + int(c, 16)) for c in hashlib.sha256(base64.b64decode(key)).hexdigest()[:32])
-panel = f"EXT_PANEL_{ext_id}"
+dev_id = "".join(chr(ord("a") + int(c, 16)) for c in hashlib.sha256(base64.b64decode(key)).hexdigest()[:32])
+panel = f"EXT_PANEL_{STORE_ID if mode == 'store' else dev_id}"
+other = f"EXT_PANEL_{dev_id if mode == 'store' else STORE_ID}"
 width = int(re.search(r"--hop-panel-width:\s*(\d+)px", open(f"{mod}/hide-panel-bar.css").read()).group(1))
 
 def labs(state):
@@ -49,17 +62,20 @@ def profile(prefs):
     v = prefs.setdefault("vivaldi", {})
     v.setdefault("appearance", {})["css_ui_mods_directory"] = mod
     panels = v.setdefault("panels", {})
-    panels.setdefault("window_defaults", {}).update(width=width, contentVisible=True, selectedPanel=panel)
-    hop = [e for e in panels.get("web", {}).get("elements", []) if e.get("id") == panel]
+    elements = panels.get("web", {}).get("elements", [])
+    hop = [e for e in elements if e.get("id") == panel]
     for element in hop: element["width"] = width
-    return bool(hop)
+    panels.setdefault("window_defaults", {}).update(width=width, contentVisible=True, selectedPanel=panel)
+    return bool(hop), any(e.get("id") == other for e in elements)
 
 for directory, info in profiles.items():
     name = f"{info.get('name', directory)} ({directory})"
     loaded = []
     edit(f"{data}/{directory}/Preferences", lambda prefs: loaded.append(profile(prefs)))
-    print(f"Set up {name}" + ("" if loaded[0] else ": extension not loaded yet"))
-    if not loaded[0]: missing.append(name)
+    found, both = loaded[0]
+    print(f"Set up {name}" + ("" if found else ": extension not installed yet"))
+    if both: print(f"  {name} also has the {'unpacked' if mode == 'store' else 'store'} version; remove it on vivaldi://extensions")
+    if not found: missing.append(name)
 with open(sys.argv[1] + "/.hop-missing", "w") as f: f.write("\n".join(missing))
 EOF
 
@@ -69,13 +85,24 @@ if [[ -z "$MISSING" ]]; then
   echo "Done."
   exit 0
 fi
-printf '%s' "$EXT" | pbcopy
-open -a Vivaldi "vivaldi://extensions"
-cat <<EOM
+WHERE=$(echo "$MISSING" | paste -sd, - | sed 's/,/, /g')
+if [[ $MODE == store ]]; then
+  open -a Vivaldi "https://chromewebstore.google.com/detail/hop-sidebar/hkokhefgbadgimfimolbkhjoeehnfdgn"
+  cat <<EOM
 
-Load the extension in: $(echo "$MISSING" | paste -sd, - | sed 's/,/, /g')
-On vivaldi://extensions turn on Developer mode, click Load unpacked and choose
-  $EXT
-(the path is on the clipboard: ⌘⇧G in the folder dialog, then ⌘V). Remove any older Hop Sidebar card there.
+Install the extension in: $WHERE
+from the Chrome Web Store page that just opened (Add to Vivaldi; in each profile).
 Then quit Vivaldi and run ./install.sh again, which fixes the panel width.
 EOM
+else
+  printf '%s' "$EXT" | pbcopy
+  open -a Vivaldi "vivaldi://extensions"
+  cat <<EOM
+
+Load the extension in: $WHERE
+On vivaldi://extensions turn on Developer mode, click Load unpacked and choose
+  $EXT
+(the path is on the clipboard: ⌘⇧G in the folder dialog, then ⌘V).
+Then quit Vivaldi and run ./install.sh --dev again, which fixes the panel width.
+EOM
+fi
