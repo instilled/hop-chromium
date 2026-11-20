@@ -42,8 +42,17 @@ chrome.runtime.onInstalled.addListener(ungroupLeftovers);
 
 // First install: the setup guide (open the sidebar, pin sites, import from Arc, shortcuts, calendar).
 chrome.runtime.onInstalled.addListener(({ reason }) => {
-  if (reason === "install") chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+  if (reason === "install") openWelcome().catch(console.warn);
 });
+
+// A service worker has no "current window", so tabs.create() without a window fails when none is open
+// (e.g. the extension loads at browser launch); open the page in a new window then.
+async function openWelcome() {
+  const url = chrome.runtime.getURL("welcome.html");
+  const win = await chrome.windows.getLastFocused({ windowTypes: ["normal"] }).catch(() => undefined);
+  if (win) await chrome.tabs.create({ url, windowId: win.id });
+  else await chrome.windows.create({ url });
+}
 
 // MARK: Bookmark tabs
 
