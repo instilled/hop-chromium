@@ -7,6 +7,9 @@ import { occurrences, parseICS } from "./ics.js";
 const CACHE_MS = 15 * 1000; // the sidebar keeps its own longer cache
 const cache = new Map(); // key → { at, value }
 
+/** Sizes of the last downloads, for diagnostics.js. */
+export const previewStats = {};
+
 async function cached(key, load) {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
@@ -36,7 +39,9 @@ export function gmailPreview(bookmarkUrl) {
     const type = response.headers.get("content-type") ?? "";
     if (response.status === 401 || type.includes("text/html")) throw new Error("Sign in to Gmail in this browser profile.");
     if (!response.ok) throw new Error(`Gmail answered ${response.status}.`);
-    const xml = new DOMParser().parseFromString(await response.text(), "application/xml");
+    const body = await response.text();
+    previewStats.gmailKB = Math.round(body.length / 1024);
+    const xml = new DOMParser().parseFromString(body, "application/xml");
     const text = (node, selector) => node.querySelector(selector)?.textContent?.trim() ?? "";
     return {
       total: Number(text(xml, "fullcount")) || 0,
@@ -58,14 +63,23 @@ export async function calendarPreview() {
   const events = await cached(`ics:${calendarIcs}`, async () => {
     const response = await fetch(calendarIcs);
     if (!response.ok) throw new Error(`Calendar answered ${response.status}. Check the address in Options.`);
-    return parseICS(await response.text());
+    const body = await response.text();
+    const started = performance.now();
+    const parsed = parseICS(body);
+    Object.assign(previewStats, {
+      icsKB: Math.round(body.length / 1024), icsEvents: parsed.length,
+      icsParseMs: Math.round(performance.now() - started),
+    });
+    return parsed;
   });
   const now = Date.now();
   const midnight = new Date();
   midnight.setHours(24, 0, 0, 0);
   const tomorrowEnd = new Date(midnight);
   tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+  const expanding = performance.now();
   const all = occurrences(events, now, tomorrowEnd.getTime());
+  previewStats.icsExpandMs = Math.round(performance.now() - expanding);
   return [
     { day: "Today", events: all.filter((e) => e.start < midnight.getTime()) },
     { day: "Tomorrow", events: all.filter((e) => e.start >= midnight.getTime()) },
@@ -117,6 +131,7 @@ export async function chatPreview(bookmark, windowId, boundTabId) {
   if (!tab) throw new Error("Open Chat once to see messages here.");
   if (tab.discarded) throw new Error("The Chat tab is asleep; open it once to see messages.");
   const results = await chrome.scripting.executeScript({ target: { tabId: tab.id, allFrames: true }, func: readChatPage });
+  previewStats.chatFrames = results.length;
   const best = results.map((r) => r.result).filter(Boolean).sort((a, b) => b.items.length - a.items.length)[0];
   return { tabId: tab.id, items: best?.items ?? [], namesOnly: Boolean(best?.namesOnly) };
 }

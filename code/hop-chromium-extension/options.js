@@ -1,6 +1,7 @@
 // Sidebar settings, stored in chrome.storage.sync so they follow the browser profile.
 
 import { calendarAddress, saveCalendarAddress } from "./calendar-setting.js";
+import { allSamples } from "./diagnostics.js";
 
 const text = document.getElementById("background");
 const picker = document.getElementById("picker");
@@ -43,3 +44,16 @@ calendar.addEventListener("change", async () => {
 const duplicates = document.getElementById("duplicates");
 chrome.storage.sync.get("duplicates").then((stored) => (duplicates.value = stored.duplicates ?? "ask"));
 duplicates.addEventListener("change", () => chrome.storage.sync.set({ duplicates: duplicates.value }));
+
+// MARK: Diagnostics (see diagnostics.js)
+
+document.getElementById("export-diagnostics").addEventListener("click", async () => {
+  const samples = await allSamples();
+  const report = { exportedAt: new Date().toISOString(), userAgent: navigator.userAgent, samples };
+  const link = Object.assign(document.createElement("a"), {
+    href: URL.createObjectURL(new Blob([JSON.stringify(report)], { type: "application/json" })),
+    download: `hop-diagnostics-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}.json`,
+  });
+  link.click();
+  document.getElementById("diagnostics-status").textContent = `${samples.length} samples.`;
+});

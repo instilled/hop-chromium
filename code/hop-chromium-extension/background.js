@@ -1,5 +1,8 @@
 import { adoptRestoredTabs, openBookmark, pinnedFolder, rebind, saveBoundUrls, unbind } from "./bookmark-tabs.js";
 import { noteStartup, onTabCreated, onTabUpdated } from "./duplicates.js";
+import { collector } from "./diagnostics.js";
+
+const diag = collector("background", async () => ({ allTabs: (await chrome.tabs.query({})).length }));
 
 // The toolbar button (and its shortcut) opens the side panel instead of a popup.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(console.error);
@@ -56,25 +59,36 @@ async function openWelcome() {
 
 // MARK: Bookmark tabs
 
-chrome.tabs.onRemoved.addListener(async (tabId, { isWindowClosing }) => {
+chrome.tabs.onRemoved.addListener((tabId, { isWindowClosing }) => diag.timed("tabs.onRemoved", async () => {
   await unbind(tabId);
   // Keep the saved addresses when windows close (e.g. quitting), so the tabs can be re-bound on restart.
   if (!isWindowClosing) await saveBoundUrls();
-});
+}));
 chrome.tabs.onReplaced.addListener((added, removed) => rebind(removed, added));
-chrome.tabs.onUpdated.addListener(async (tabId, { url }) => {
-  if (url && (await chrome.storage.session.get(`bound:${tabId}`))[`bound:${tabId}`]) await saveBoundUrls();
-});
+chrome.tabs.onUpdated.addListener((tabId, { url }) => diag.timed("tabs.onUpdated:bound", async () => {
+  if (url && (await chrome.storage.session.get(`bound:${tabId}`))[`bound:${tabId}`]) {
+    diag.count("saveBoundUrls");
+    await saveBoundUrls();
+  }
+}));
 
 // MARK: Duplicate tabs from other apps
 
-chrome.tabs.onCreated.addListener((tab) => onTabCreated(tab).catch(console.warn));
-chrome.tabs.onUpdated.addListener((tabId, change, tab) => onTabUpdated(tabId, change, tab)?.catch(console.warn));
+// Duplicate checks include a 300 ms wait, so their timings are wall-clock, not work.
+chrome.tabs.onCreated.addListener((tab) => diag.timed("duplicates:created", () => onTabCreated(tab)).catch(console.warn));
+chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+  diag.count("tabs.onUpdated");
+  const checking = onTabUpdated(tabId, change, tab);
+  if (checking) diag.timed("duplicates:updated", () => checking).catch(console.warn);
+});
 
 // Restored tabs appear over the first seconds after a restart; re-bind them as they come.
 chrome.runtime.onStartup.addListener(() => {
   noteStartup();
-  for (const delay of [500, 3000, 10000]) setTimeout(() => adoptRestoredTabs().catch(console.warn), delay);
+  diag.count("startup");
+  for (const delay of [500, 3000, 10000]) {
+    setTimeout(() => diag.timed("adoptRestoredTabs", adoptRestoredTabs).catch(console.warn), delay);
+  }
 });
 chrome.runtime.onInstalled.addListener(() => adoptRestoredTabs().catch(console.warn));
 

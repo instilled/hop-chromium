@@ -3,7 +3,8 @@
 import { adoptRestoredTabs, bind, boundTabs, openBookmark, PINNED_FOLDER, pinnedFolder } from "./bookmark-tabs.js";
 import { CALENDAR_HELP, saveCalendarAddress } from "./calendar-setting.js";
 import { pendingAsk, switchTo, ASK } from "./duplicates.js";
-import { calendarPreview, chatPreview, gmailPreview, openChatConversation, previewKind } from "./previews.js";
+import { calendarPreview, chatPreview, gmailPreview, openChatConversation, previewKind, previewStats } from "./previews.js";
+import { collector } from "./diagnostics.js";
 
 const NONE = chrome.tabGroups.TAB_GROUP_ID_NONE;
 const PINNED_SHORTCUTS = 6;
@@ -15,6 +16,16 @@ let dragged; // the bookmark being dragged
 let draggedTab; // a tab from the tab list being dragged
 let renameNext; // bookmark id to start renaming after the next render (a new folder)
 let lastPinned = []; // pinned bookmarks from the last render, for prefetching previews
+let lastTabCount = 0; // tabs in this window at the last render (diagnostics)
+
+const diag = collector("sidebar", async () => ({
+  heapMB: performance.memory && Math.round(performance.memory.usedJSHeapSize / 1e5) / 10,
+  domNodes: document.getElementsByTagName("*").length,
+  windowTabs: lastTabCount,
+  allTabs: (await chrome.tabs.query({})).length,
+  visible: document.visibilityState,
+  ...previewStats,
+}));
 
 const el = (tag, props = {}, ...children) => {
   const node = Object.assign(document.createElement(tag), props);
@@ -423,7 +434,7 @@ const cards = { gmail: gmailCard, calendar: calendarCard, chat: chatCard };
 /** Load fresh data into the cache (one load per tile at a time). */
 function refreshPeek(bookmark, kind) {
   if (!peekLoading.has(bookmark.id)) {
-    const loading = loaders[kind](bookmark)
+    const loading = diag.timed(`peek:${kind}`, () => loaders[kind](bookmark))
       .then((data) => peekData.set(bookmark.id, { at: Date.now(), data }))
       .catch((error) => peekData.set(bookmark.id, { at: Date.now(), error }))
       .finally(() => peekLoading.delete(bookmark.id));
@@ -609,6 +620,8 @@ async function renderDuplicate() {
   );
 }
 
+const timedRender = () => (paused ? diag.count("render:paused") : diag.timed("render", render));
+
 async function render() {
   if (paused) return;
   renderDuplicate().catch(console.warn);
@@ -617,6 +630,7 @@ async function render() {
     pinnedFolder(), boundTabs(windowId),
   ]);
 
+  lastTabCount = tabs.length;
   const tabById = new Map(tabs.map((t) => [t.id, t]));
   const ctx = { pinnedId: pinned?.id, tabFor: (bookmarkId) => tabById.get(bound.get(bookmarkId)) };
   // A bound tab shows on its bookmark, not in the tab list (unless the bookmark was deleted).
@@ -700,13 +714,24 @@ async function start() {
   applyBackground();
   chrome.storage.onChanged.addListener((changes, area) => area === "sync" && "background" in changes && applyBackground());
 
-  const refresh = debounce(render);
-  for (const event of [chrome.tabs.onCreated, chrome.tabs.onRemoved, chrome.tabs.onUpdated, chrome.tabs.onActivated,
-    chrome.tabs.onMoved, chrome.tabs.onAttached, chrome.tabs.onDetached, chrome.tabs.onReplaced,
-    chrome.tabGroups.onCreated, chrome.tabGroups.onUpdated, chrome.tabGroups.onRemoved, chrome.tabGroups.onMoved,
-    chrome.bookmarks.onCreated, chrome.bookmarks.onRemoved, chrome.bookmarks.onChanged, chrome.bookmarks.onMoved,
-    chrome.bookmarks.onChildrenReordered, chrome.bookmarks.onImportEnded, chrome.storage.onChanged]) {
-    event.addListener(refresh);
+  const refresh = debounce(timedRender);
+  const events = {
+    "tabs.onCreated": chrome.tabs.onCreated, "tabs.onRemoved": chrome.tabs.onRemoved,
+    "tabs.onUpdated": chrome.tabs.onUpdated, "tabs.onActivated": chrome.tabs.onActivated,
+    "tabs.onMoved": chrome.tabs.onMoved, "tabs.onAttached": chrome.tabs.onAttached,
+    "tabs.onDetached": chrome.tabs.onDetached, "tabs.onReplaced": chrome.tabs.onReplaced,
+    "tabGroups.onCreated": chrome.tabGroups.onCreated, "tabGroups.onUpdated": chrome.tabGroups.onUpdated,
+    "tabGroups.onRemoved": chrome.tabGroups.onRemoved, "tabGroups.onMoved": chrome.tabGroups.onMoved,
+    "bookmarks.onCreated": chrome.bookmarks.onCreated, "bookmarks.onRemoved": chrome.bookmarks.onRemoved,
+    "bookmarks.onChanged": chrome.bookmarks.onChanged, "bookmarks.onMoved": chrome.bookmarks.onMoved,
+    "bookmarks.onChildrenReordered": chrome.bookmarks.onChildrenReordered,
+    "bookmarks.onImportEnded": chrome.bookmarks.onImportEnded, "storage.onChanged": chrome.storage.onChanged,
+  };
+  for (const [name, event] of Object.entries(events)) {
+    event.addListener(() => {
+      diag.count(`event:${name}`);
+      refresh();
+    });
   }
 
   document.getElementById("new-tab").addEventListener("click", () => chrome.tabs.create({ windowId }));
@@ -720,7 +745,7 @@ async function start() {
     await chrome.tabs.remove(ids);
   });
 
-  await render();
+  await timedRender();
 }
 
 start();
